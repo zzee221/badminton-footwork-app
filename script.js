@@ -112,9 +112,14 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
 
             Object.entries(steps).forEach(([sequence, step]) => {
-                const isFree = step.isFree;
+                const isFree = stepConfig.isStepFree(type, sequence);
                 const indicatorColor = isFree ? 'bg-green-500' : 'bg-purple-500';
                 const lockIcon = isFree ? '' : '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>';
+                
+                // 计算总视频数
+                const totalVideos = step.patterns.reduce((sum, pattern) => sum + pattern.videos.length, 0);
+                // 计算免费视频数
+                const freeVideos = step.patterns.reduce((sum, pattern) => sum + (pattern.isFree ? pattern.videos.length : 0), 0);
                 
                 html += `
                     <div class="step-item border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition duration-200 ${!isFree ? 'border-purple-200' : 'border-gray-200'}" 
@@ -125,9 +130,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span class="font-medium text-gray-800">${sequence}</span>
                                 ${lockIcon}
                             </div>
-                            <span class="text-xs text-gray-500">${step.videos.length} 视频</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-gray-500">${totalVideos} 视频</span>
+                                ${freeVideos > 0 && freeVideos < totalVideos ? `<span class="text-xs text-green-600">${freeVideos} 免费</span>` : ''}
+                            </div>
                         </div>
                         <p class="text-sm text-gray-600">${step.name}</p>
+                        ${step.patterns.length > 1 ? `<div class="mt-1 text-xs text-gray-500">${step.patterns.length} 种模式</div>` : ''}
                     </div>
                 `;
             });
@@ -195,8 +204,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // 从配置系统获取视频列表
         const stepInfo = stepConfig.getStepInfo(stepType, sequence);
         
-        if (stepInfo && stepInfo.videos.length > 0) {
-            currentVideoList = stepInfo.videos;
+        if (stepInfo && stepInfo.patterns.length > 0) {
+            // 获取用户可访问的模式
+            const accessiblePatterns = stepInfo.patterns.filter(pattern => {
+                return pattern.isFree || authManager.hasPermission('premium');
+            });
+            
+            if (accessiblePatterns.length > 0) {
+                // 合并所有可访问模式的视频
+                currentVideoList = [];
+                accessiblePatterns.forEach(pattern => {
+                    currentVideoList.push(...pattern.videos);
+                });
+            } else {
+                currentVideoList = [];
+            }
         } else {
             currentVideoList = [];
         }
@@ -294,6 +316,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // 显示对应的步伐说明
         if (stepInfo) {
             descriptionText.textContent = stepInfo.description;
+            
+            // 如果有多种模式，添加模式信息
+            if (stepInfo.patterns.length > 1) {
+                const accessiblePatterns = stepInfo.patterns.filter(pattern => {
+                    return pattern.isFree || authManager.hasPermission('premium');
+                });
+                
+                if (accessiblePatterns.length > 0) {
+                    const patternNames = accessiblePatterns.map(p => p.name).join('、');
+                    descriptionText.innerHTML += `<br><br><strong>可用模式：</strong>${patternNames}`;
+                }
+            }
         } else {
             descriptionText.textContent = '选择两个点位后，将显示对应的步伐说明。步伐是羽毛球运动的基础，正确的步伐能够帮助球员快速到达击球位置，提高击球质量。';
         }
