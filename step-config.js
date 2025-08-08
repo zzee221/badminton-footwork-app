@@ -15,6 +15,11 @@ class StepConfig {
                                 name: '基础步伐',
                                 isFree: true,
                                 videos: ['平行启动1-2.mp4']
+                            },
+                            {
+                                name: '进阶步伐',
+                                isFree: false,
+                                videos: ['平行启动1-2（1）.mp4']
                             }
                         ]
                     },
@@ -26,6 +31,11 @@ class StepConfig {
                                 name: '基础步伐',
                                 isFree: true,
                                 videos: ['平行启动1-3.mp4']
+                            },
+                            {
+                                name: '进阶步伐',
+                                isFree: false,
+                                videos: ['平行启动1-3（1）.mp4']
                             }
                         ]
                     },
@@ -48,6 +58,11 @@ class StepConfig {
                                 name: '基础步伐',
                                 isFree: true,
                                 videos: ['平行启动1-5.mp4']
+                            },
+                            {
+                                name: '进阶步伐',
+                                isFree: false,
+                                videos: ['平行启动1-5（1）.mp4', '平行启动1-5（被动交叉）.mp4']
                             }
                         ]
                     },
@@ -124,6 +139,11 @@ class StepConfig {
                                 name: '基础步伐',
                                 isFree: true,
                                 videos: ['前后启动1-4.mp4']
+                            },
+                            {
+                                name: '进阶步伐',
+                                isFree: false,
+                                videos: ['前后启动1-4（1）.mp4']
                             }
                         ]
                     },
@@ -135,6 +155,11 @@ class StepConfig {
                                 name: '基础步伐',
                                 isFree: true,
                                 videos: ['前后启动1-5.mp4']
+                            },
+                            {
+                                name: '进阶步伐',
+                                isFree: false,
+                                videos: ['前后启动1-5（单脚杀）.mp4', '前后启动1-5（并步）.mp4']
                             }
                         ]
                     },

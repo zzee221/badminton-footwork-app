@@ -28,6 +28,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentVideoIndex = 0;
     // 当前步伐的所有视频列表
     let currentVideoList = [];
+    // 免费视频索引列表
+    let freeVideoIndices = [];
+    // 可访问的付费视频索引列表
+    let accessiblePaidVideoIndices = [];
 
     // 监听步伐类型选择变化
     stepTypeRadios.forEach(radio => {
@@ -92,7 +96,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 检查是否有任何可访问的模式
         const accessiblePatterns = stepInfo.patterns.filter(pattern => {
-            return pattern.isFree || authManager.hasPermission('premium');
+            // 如果是免费模式，所有人都可以访问
+            if (pattern.isFree) return true;
+            // 如果是付费模式，需要会员权限
+            return authManager.currentUser && authManager.hasPermission('premium');
         });
         
         return accessiblePatterns.length > 0;
@@ -204,51 +211,61 @@ document.addEventListener('DOMContentLoaded', function() {
         const stepType = currentStepType === 'parallel' ? '平行启动' : '前后启动';
         
         // 从配置系统获取视频列表
-        const stepInfo = stepConfig.getStepInfo(stepType, sequence);
-        
-        console.log('调试信息:', {
-            sequence,
-            stepType,
-            stepInfo: stepInfo ? '存在' : '不存在',
-            patterns: stepInfo ? stepInfo.patterns : [],
-            hasPermission: authManager.hasPermission('premium')
-        });
+        const stepInfo = stepConfig.getStepInfo(currentStepType, sequence);
         
         if (stepInfo && stepInfo.patterns.length > 0) {
-            // 获取用户可访问的模式
-            const accessiblePatterns = stepInfo.patterns.filter(pattern => {
-                return pattern.isFree || authManager.hasPermission('premium');
+            // 分离免费和付费模式
+            const freePatterns = stepInfo.patterns.filter(pattern => pattern.isFree);
+            const paidPatterns = stepInfo.patterns.filter(pattern => !pattern.isFree);
+            
+            // 获取用户可访问的付费模式
+            const accessiblePaidPatterns = paidPatterns.filter(pattern => {
+                return authManager.currentUser && authManager.hasPermission('premium');
             });
             
-            console.log('可访问模式:', accessiblePatterns);
+            // 存储所有视频（用于显示翻页按钮）
+            currentVideoList = [];
+            stepInfo.patterns.forEach(pattern => {
+                currentVideoList.push(...pattern.videos);
+            });
             
-            if (accessiblePatterns.length > 0) {
-                // 合并所有可访问模式的视频
-                currentVideoList = [];
-                accessiblePatterns.forEach(pattern => {
-                    currentVideoList.push(...pattern.videos);
-                });
-                console.log('视频列表:', currentVideoList);
-            } else {
-                currentVideoList = [];
-            }
+            // 存储免费视频索引
+            freeVideoIndices = [];
+            let currentIndex = 0;
+            freePatterns.forEach(pattern => {
+                for (let i = 0; i < pattern.videos.length; i++) {
+                    freeVideoIndices.push(currentIndex + i);
+                }
+                currentIndex += pattern.videos.length;
+            });
+            
+            // 存储可访问的付费视频索引
+            accessiblePaidVideoIndices = [];
+            accessiblePaidPatterns.forEach(pattern => {
+                for (let i = 0; i < pattern.videos.length; i++) {
+                    accessiblePaidVideoIndices.push(currentIndex + i);
+                }
+                currentIndex += pattern.videos.length;
+            });
+            
         } else {
             currentVideoList = [];
+            freeVideoIndices = [];
+            accessiblePaidVideoIndices = [];
         }
 
         // 检查访问权限
-        const hasAccess = checkStepAccess(stepType, sequence);
-        console.log('访问权限:', hasAccess);
-
-        if (currentVideoList.length === 0) {
-            // 没有找到对应的视频
-            showNoVideoModal(sequence);
-            return;
-        }
+        const hasAccess = checkStepAccess(currentStepType, sequence);
 
         if (!hasAccess) {
             // 没有访问权限，显示升级提示
             showUpgradeModal(sequence, stepType);
+            return;
+        }
+
+        if (currentVideoList.length === 0) {
+            // 没有找到对应的视频
+            showNoVideoModal(sequence);
             return;
         }
 
@@ -264,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         modalTitle.textContent = `从点位${sequence[0]}到点位${sequence[2]}的步伐`;
         
         // 显示默认说明
-        descriptionText.textContent = stepDescriptions.default;
+        descriptionText.textContent = '选择两个点位后，将显示对应的步伐说明。步伐是羽毛球运动的基础，正确的步伐能够帮助球员快速到达击球位置，提高击球质量。';
         
         // 隐藏切换按钮和计数器
         prevGifBtn.classList.add('hidden');
@@ -322,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
         stepVideo.load();
         
         // 获取步伐信息
-        const stepInfo = stepConfig.getStepInfo(stepType, sequence);
+        const stepInfo = stepConfig.getStepInfo(currentStepType, sequence);
         
         // 设置标题
         modalTitle.textContent = `${stepType}：${stepInfo.name} (${sequence})`;
@@ -349,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 更新计数器
         videoCounter.textContent = `${currentVideoIndex + 1}/${currentVideoList.length}`;
         
-        // 显示或隐藏切换按钮
+        // 显示或隐藏切换按钮（只要总视频数大于1就显示）
         if (currentVideoList.length > 1) {
             prevGifBtn.classList.remove('hidden');
             nextGifBtn.classList.remove('hidden');
@@ -368,7 +385,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function showPrevVideo() {
         if (currentVideoList.length === 0) return;
         
-        currentVideoIndex = (currentVideoIndex - 1 + currentVideoList.length) % currentVideoList.length;
+        const nextIndex = (currentVideoIndex - 1 + currentVideoList.length) % currentVideoList.length;
+        
+        // 检查是否有权限访问目标视频
+        if (!canAccessVideo(nextIndex)) {
+            showUpgradeModalForVideo();
+            return;
+        }
+        
+        currentVideoIndex = nextIndex;
         const prevVideo = currentVideoList[currentVideoIndex];
         stepVideo.src = `步伐MP4图/${prevVideo}`;
         
@@ -383,7 +408,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function showNextVideo() {
         if (currentVideoList.length === 0) return;
         
-        currentVideoIndex = (currentVideoIndex + 1) % currentVideoList.length;
+        const nextIndex = (currentVideoIndex + 1) % currentVideoList.length;
+        
+        // 检查是否有权限访问目标视频
+        if (!canAccessVideo(nextIndex)) {
+            showUpgradeModalForVideo();
+            return;
+        }
+        
+        currentVideoIndex = nextIndex;
         const nextVideo = currentVideoList[currentVideoIndex];
         stepVideo.src = `步伐MP4图/${nextVideo}`;
         
@@ -392,6 +425,45 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 更新计数器
         videoCounter.textContent = `${currentVideoIndex + 1}/${currentVideoList.length}`;
+    }
+
+    // 检查是否有权限访问指定索引的视频
+    function canAccessVideo(index) {
+        return freeVideoIndices.includes(index) || accessiblePaidVideoIndices.includes(index);
+    }
+
+    // 显示视频升级提示
+    function showUpgradeModalForVideo() {
+        stepVideo.src = '';
+        stepVideo.classList.add('hidden');
+        videoNotice.classList.add('hidden');
+        
+        modalTitle.textContent = '需要会员';
+        descriptionText.innerHTML = `
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-center mb-2">
+                    <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="font-semibold text-yellow-800">需要会员</span>
+                </div>
+                <p class="text-yellow-700 text-sm mb-3">此视频内容需要会员才能查看</p>
+                <button id="upgrade-btn-video" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm transition duration-300">
+                    立即升级
+                </button>
+            </div>
+        `;
+        
+        // 隐藏切换按钮和计数器
+        prevGifBtn.classList.add('hidden');
+        nextGifBtn.classList.add('hidden');
+        videoCounter.classList.add('hidden');
+        
+        // 绑定升级按钮事件
+        document.getElementById('upgrade-btn-video').addEventListener('click', () => {
+            modal.classList.add('hidden');
+            authManager.showUpgradeModal();
+        });
     }
 
     // 绑定切换按钮事件

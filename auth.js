@@ -48,14 +48,10 @@ class AuthManager {
             .eq('status', 'active')
             .single();
 
-        console.log('订阅信息查询结果:', { data, error });
-        
         if (data) {
             this.currentSubscription = data;
-            console.log('设置当前订阅:', this.currentSubscription);
         } else {
             this.currentSubscription = null;
-            console.log('没有找到活跃订阅');
         }
     }
 
@@ -567,8 +563,6 @@ class AuthManager {
                 console.error('记录激活历史失败:', historyError);
                 // 如果记录历史失败，显示警告但不影响激活流程
                 console.warn('激活码已成功激活，但记录历史时出现问题');
-            } else {
-                console.log('激活历史记录成功');
             }
 
             this.showMessage('upgrade-message', '会员激活成功！', 'success');
