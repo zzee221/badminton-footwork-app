@@ -48,8 +48,14 @@ class AuthManager {
             .eq('status', 'active')
             .single();
 
+        console.log('订阅信息查询结果:', { data, error });
+        
         if (data) {
             this.currentSubscription = data;
+            console.log('设置当前订阅:', this.currentSubscription);
+        } else {
+            this.currentSubscription = null;
+            console.log('没有找到活跃订阅');
         }
     }
 
@@ -355,17 +361,30 @@ class AuthManager {
 
     // 登录
     async login() {
-        const email = document.getElementById('login-email').value;
+        const username = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
 
-        if (!email || !password) {
-            this.showMessage('auth-message', '请填写邮箱和密码', 'error');
+        if (!username || !password) {
+            this.showMessage('auth-message', '请填写用户名和密码', 'error');
             return;
         }
 
         try {
+            // 先通过用户名查找邮箱
+            const { data: profileData, error: profileError } = await this.supabase
+                .from('profiles')
+                .select('email')
+                .eq('username', username)
+                .single();
+
+            if (profileError || !profileData) {
+                this.showMessage('auth-message', '用户名不存在', 'error');
+                return;
+            }
+
+            // 使用找到的邮箱登录
             const { data, error } = await this.supabase.auth.signInWithPassword({
-                email,
+                email: profileData.email,
                 password
             });
 
@@ -387,12 +406,11 @@ class AuthManager {
 
     // 注册
     async register() {
-        const email = document.getElementById('register-email').value;
         const username = document.getElementById('register-username').value;
         const password = document.getElementById('register-password').value;
 
-        if (!email || !username || !password) {
-            this.showMessage('auth-message', '请填写邮箱、用户名和密码', 'error');
+        if (!username || !password) {
+            this.showMessage('auth-message', '请填写用户名和密码', 'error');
             return;
         }
 
@@ -402,9 +420,24 @@ class AuthManager {
         }
 
         try {
+            // 检查用户名是否已存在
+            const { data: existingUser, error: checkError } = await this.supabase
+                .from('profiles')
+                .select('username')
+                .eq('username', username)
+                .single();
+
+            if (existingUser) {
+                this.showMessage('auth-message', '用户名已存在', 'error');
+                return;
+            }
+
+            // 生成临时邮箱（基于用户名和时间戳）
+            const tempEmail = `${username}_${Date.now()}@temp-user.local`;
+            
             // 注册用户
             const { data, error } = await this.supabase.auth.signUp({
-                email,
+                email: tempEmail,
                 password
             });
 
@@ -413,19 +446,22 @@ class AuthManager {
                 return;
             }
 
-            // 更新用户名
+            // 创建用户资料
             if (data.user) {
-                const { error: updateError } = await this.supabase
+                const { error: profileError } = await this.supabase
                     .from('profiles')
-                    .update({ username })
-                    .eq('id', data.user.id);
+                    .insert([{
+                        id: data.user.id,
+                        username: username,
+                        email: tempEmail
+                    }]);
 
-                if (updateError) {
-                    console.error('更新用户名失败:', updateError);
+                if (profileError) {
+                    console.error('创建用户资料失败:', profileError);
                 }
             }
 
-            this.showMessage('auth-message', '注册成功！请检查邮箱验证邮件', 'success');
+            this.showMessage('auth-message', '注册成功！', 'success');
             setTimeout(() => {
                 document.getElementById('auth-modal').classList.add('hidden');
                 this.checkUserStatus();
@@ -538,6 +574,7 @@ class AuthManager {
             this.showMessage('upgrade-message', '会员激活成功！', 'success');
             setTimeout(() => {
                 document.getElementById('upgrade-modal').classList.add('hidden');
+                // 重新获取用户状态，包括新的订阅信息
                 this.checkUserStatus();
             }, 2000);
 

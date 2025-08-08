@@ -86,14 +86,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 检查步伐访问权限
     function checkStepAccess(stepType, sequence) {
-        // 使用配置系统检查权限
-        const isFree = stepConfig.isStepFree(stepType, sequence);
+        const stepInfo = stepConfig.getStepInfo(stepType, sequence);
         
-        if (!isFree) {
-            return authManager.hasPermission('premium');
-        }
+        if (!stepInfo) return false;
         
-        return true; // 免费用户可以访问基础步伐
+        // 检查是否有任何可访问的模式
+        const accessiblePatterns = stepInfo.patterns.filter(pattern => {
+            return pattern.isFree || authManager.hasPermission('premium');
+        });
+        
+        return accessiblePatterns.length > 0;
     }
 
     // 渲染步伐列表
@@ -204,11 +206,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // 从配置系统获取视频列表
         const stepInfo = stepConfig.getStepInfo(stepType, sequence);
         
+        console.log('调试信息:', {
+            sequence,
+            stepType,
+            stepInfo: stepInfo ? '存在' : '不存在',
+            patterns: stepInfo ? stepInfo.patterns : [],
+            hasPermission: authManager.hasPermission('premium')
+        });
+        
         if (stepInfo && stepInfo.patterns.length > 0) {
             // 获取用户可访问的模式
             const accessiblePatterns = stepInfo.patterns.filter(pattern => {
                 return pattern.isFree || authManager.hasPermission('premium');
             });
+            
+            console.log('可访问模式:', accessiblePatterns);
             
             if (accessiblePatterns.length > 0) {
                 // 合并所有可访问模式的视频
@@ -216,6 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 accessiblePatterns.forEach(pattern => {
                     currentVideoList.push(...pattern.videos);
                 });
+                console.log('视频列表:', currentVideoList);
             } else {
                 currentVideoList = [];
             }
@@ -225,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 检查访问权限
         const hasAccess = checkStepAccess(stepType, sequence);
+        console.log('访问权限:', hasAccess);
 
         if (currentVideoList.length === 0) {
             // 没有找到对应的视频
