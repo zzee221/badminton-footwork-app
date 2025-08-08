@@ -366,21 +366,13 @@ class AuthManager {
         }
 
         try {
-            // 先通过用户名查找邮箱
-            const { data: profileData, error: profileError } = await this.supabase
-                .from('profiles')
-                .select('email')
-                .eq('username', username)
-                .single();
-
-            if (profileError || !profileData) {
-                this.showMessage('auth-message', '用户名不存在', 'error');
-                return;
-            }
-
-            // 使用找到的邮箱登录
+            // 根据用户名生成邮箱格式
+            const userEmail = `${username.toLowerCase()}@badminton-step.local`;
+            console.log('使用生成的邮箱登录:', userEmail);
+            
+            // 直接使用生成的邮箱登录
             const { data, error } = await this.supabase.auth.signInWithPassword({
-                email: profileData.email,
+                email: userEmail,
                 password
             });
 
