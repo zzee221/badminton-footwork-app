@@ -146,6 +146,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // 检查步伐访问权限
+    function checkStepAccess(stepType, sequence) {
+        // 定义需要会员权限的步伐
+        const premiumSteps = [
+            '平行启动1-6', '平行启动1-7',
+            '前后启动1-5（单脚杀）', '前后启动1-5（并步）',
+            '前后启动3-4（交叉）', '前后启动3-5（主动）'
+        ];
+
+        const vipSteps = [
+            '平行启动1-5（被动交叉）', '平行启动1-6（跨步勾对角）',
+            '平行启动1-6（跨步）', '平行启动1-7（小跳）'
+        ];
+
+        const stepKey = `${stepType}${sequence}`;
+        
+        if (vipSteps.includes(stepKey)) {
+            return authManager.hasPermission('vip');
+        } else if (premiumSteps.includes(stepKey)) {
+            return authManager.hasPermission('premium');
+        }
+        
+        return true; // 免费用户可以访问基础步伐
+    }
+
     // 高亮点位
     function highlightPoint(pointNumber) {
         resetPointHighlights();
@@ -172,25 +197,97 @@ document.addEventListener('DOMContentLoaded', function() {
             currentVideoList = availableVideos.filter(video => video.startsWith(`前后启动${sequence}`));
         }
 
+        // 检查访问权限
+        const stepType = currentStepType === 'parallel' ? '平行启动' : '前后启动';
+        const hasAccess = checkStepAccess(stepType, sequence);
+
         if (currentVideoList.length === 0) {
             // 没有找到对应的视频
-            stepVideo.src = '';
-            stepVideo.classList.add('hidden');
-            videoNotice.classList.remove('hidden');
-            modalTitle.textContent = `从点位${sequence[0]}到点位${sequence[2]}的步伐`;
-            
-            // 显示默认说明
-            descriptionText.textContent = stepDescriptions.default;
-            
-            // 隐藏切换按钮和计数器
-            prevGifBtn.classList.add('hidden');
-            nextGifBtn.classList.add('hidden');
-            videoCounter.classList.add('hidden');
-            
-            modal.classList.remove('hidden');
+            showNoVideoModal(sequence);
             return;
         }
 
+        if (!hasAccess) {
+            // 没有访问权限，显示升级提示
+            showUpgradeModal(sequence, stepType);
+            return;
+        }
+
+        // 显示视频
+        showVideoModal(sequence, stepType);
+    }
+
+    // 显示无视频模态框
+    function showNoVideoModal(sequence) {
+        stepVideo.src = '';
+        stepVideo.classList.add('hidden');
+        videoNotice.classList.remove('hidden');
+        modalTitle.textContent = `从点位${sequence[0]}到点位${sequence[2]}的步伐`;
+        
+        // 显示默认说明
+        descriptionText.textContent = stepDescriptions.default;
+        
+        // 隐藏切换按钮和计数器
+        prevGifBtn.classList.add('hidden');
+        nextGifBtn.classList.add('hidden');
+        videoCounter.classList.add('hidden');
+        
+        modal.classList.remove('hidden');
+    }
+
+    // 显示升级提示模态框
+    function showUpgradeModal(sequence, stepType) {
+        stepVideo.src = '';
+        stepVideo.classList.add('hidden');
+        videoNotice.classList.add('hidden');
+        
+        const stepKey = `${stepType}${sequence}`;
+        let requiredPlan = 'premium';
+        let planName = '高级会员';
+        
+        // 检查需要哪个级别的会员
+        const vipSteps = [
+            '平行启动1-5（被动交叉）', '平行启动1-6（跨步勾对角）',
+            '平行启动1-6（跨步）', '平行启动1-7（小跳）'
+        ];
+        
+        if (vipSteps.includes(stepKey)) {
+            requiredPlan = 'vip';
+            planName = 'VIP会员';
+        }
+        
+        modalTitle.textContent = `${stepType}从点位${sequence[0]}到点位${sequence[2]}`;
+        descriptionText.innerHTML = `
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-center mb-2">
+                    <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="font-semibold text-yellow-800">需要${planName}</span>
+                </div>
+                <p class="text-yellow-700 text-sm mb-3">此步伐内容需要${planName}才能查看</p>
+                <button id="upgrade-btn" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm transition duration-300">
+                    立即升级
+                </button>
+            </div>
+        `;
+        
+        // 隐藏切换按钮和计数器
+        prevGifBtn.classList.add('hidden');
+        nextGifBtn.classList.add('hidden');
+        videoCounter.classList.add('hidden');
+        
+        modal.classList.remove('hidden');
+        
+        // 绑定升级按钮事件
+        document.getElementById('upgrade-btn').addEventListener('click', () => {
+            modal.classList.add('hidden');
+            authManager.showUpgradeModal();
+        });
+    }
+
+    // 显示视频模态框
+    function showVideoModal(sequence, stepType) {
         // 显示第一个视频
         const firstVideo = currentVideoList[0];
         stepVideo.src = `步伐MP4图/${firstVideo}`;
@@ -205,11 +302,10 @@ document.addEventListener('DOMContentLoaded', function() {
         modalTitle.textContent = `${videoType}从点位${sequence[0]}到点位${sequence[2]}`;
 
         // 显示对应的步伐说明
-        const type = firstVideo.includes('平行') ? '平行启动' : '前后启动';
-        if (stepDescriptions[type] && stepDescriptions[type][sequence]) {
-            descriptionText.textContent = stepDescriptions[type][sequence];
-        } else if (stepDescriptions[type]) {
-            descriptionText.textContent = stepDescriptions[type].default;
+        if (stepDescriptions[stepType] && stepDescriptions[stepType][sequence]) {
+            descriptionText.textContent = stepDescriptions[stepType][sequence];
+        } else if (stepDescriptions[stepType]) {
+            descriptionText.textContent = stepDescriptions[stepType].default;
         } else {
             descriptionText.textContent = stepDescriptions.default;
         }

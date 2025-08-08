@@ -5,9 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>羽毛球步伐示意图</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+    <!-- 用户状态栏 -->
+    <div class="fixed top-4 right-4 z-50">
+        <div id="user-menu" class="bg-white rounded-lg shadow-md p-4 hidden">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                    <span id="user-avatar">U</span>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-800" id="user-name">用户</p>
+                    <p class="text-xs text-gray-500" id="user-plan">免费用户</p>
+                </div>
+                <button id="upgrade-btn-menu" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-xs transition duration-300">
+                    升级
+                </button>
+                <button id="logout-btn" class="text-red-500 hover:text-red-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <button id="login-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-300">
+            登录/注册
+        </button>
+    </div>
+
     <h1 class="text-3xl font-bold text-gray-800 mb-2">羽毛球步伐示意图</h1>
     <p class="text-gray-600 mb-6 text-center max-w-2xl">点击场地中的点位选择起点和终点，查看对应的羽毛球步伐演示。可以选择不同的启动方式。</p>
 
@@ -78,6 +105,91 @@
         </div>
     </div>
 
+    <!-- 用户认证模态框 -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button id="close-auth-modal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            
+            <!-- 登录/注册切换标签 -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <button id="login-tab" class="flex-1 py-2 px-4 text-center font-medium text-blue-600 border-b-2 border-blue-600">登录</button>
+                <button id="register-tab" class="flex-1 py-2 px-4 text-center font-medium text-gray-500 hover:text-gray-700">注册</button>
+            </div>
+
+            <!-- 登录表单 -->
+            <div id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                    <input type="email" id="login-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入邮箱">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                    <input type="password" id="login-password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入密码">
+                </div>
+                <button id="login-submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition duration-300">登录</button>
+            </div>
+
+            <!-- 注册表单 -->
+            <div id="register-form" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+                    <input type="text" id="register-username" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入用户名">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+                    <input type="email" id="register-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入邮箱">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+                    <input type="password" id="register-password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入密码（至少6位）">
+                </div>
+                <button id="register-submit" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md transition duration-300">注册</button>
+            </div>
+
+            <!-- 消息提示 -->
+            <div id="auth-message" class="mt-4 p-3 rounded-md hidden"></div>
+        </div>
+    </div>
+
+    <!-- 会员升级模态框 -->
+    <div id="upgrade-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button id="close-upgrade-modal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            
+            <h2 class="text-xl font-bold text-gray-800 mb-4">升级会员</h2>
+            <div class="space-y-4 mb-6">
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800">高级会员</h3>
+                    <p class="text-sm text-gray-600">解锁更多步伐训练内容</p>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-800">VIP会员</h3>
+                    <p class="text-sm text-gray-600">全部内容无限制访问</p>
+                </div>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">激活码</label>
+                    <input type="text" id="activation-code" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入激活码">
+                </div>
+                <button id="activate-submit" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-md transition duration-300">激活会员</button>
+            </div>
+
+            <div id="upgrade-message" class="mt-4 p-3 rounded-md hidden"></div>
+        </div>
+    </div>
+
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
