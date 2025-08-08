@@ -13,7 +13,7 @@
     <div class="fixed top-4 right-4 z-50">
         <div id="user-menu" class="bg-white rounded-lg shadow-md p-4 hidden">
             <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:bg-blue-600 transition duration-300" id="user-avatar-btn">
                     <span id="user-avatar">U</span>
                 </div>
                 <div class="flex-1">
@@ -68,6 +68,27 @@
             <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="5" style="top: 70%; left: 80%; transform: translate(-50%, -50%);">5</div>
             <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="6" style="top: 50%; left: 20%; transform: translate(-50%, -50%);">6</div>
             <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="7" style="top: 50%; left: 80%; transform: translate(-50%, -50%);">7</div>
+        </div>
+    </div>
+
+    <!-- 步伐列表展示 -->
+    <div class="bg-white rounded-lg shadow-md p-4 mt-6 mb-6 max-w-4xl w-full">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-700">步伐列表</h2>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                    <span class="text-sm text-gray-600">免费</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                    <span class="text-sm text-gray-600">会员</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="step-list" class="space-y-4">
+            <!-- 步伐列表将通过JavaScript动态生成 -->
         </div>
     </div>
 
@@ -140,10 +161,6 @@
                     <input type="text" id="register-username" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入用户名">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
-                    <input type="email" id="register-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入邮箱">
-                </div>
-                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
                     <input type="password" id="register-password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入密码（至少6位）">
                 </div>
@@ -166,13 +183,14 @@
             
             <h2 class="text-xl font-bold text-gray-800 mb-4">升级会员</h2>
             <div class="space-y-4 mb-6">
-                <div class="border border-gray-200 rounded-lg p-4">
-                    <h3 class="font-semibold text-gray-800">高级会员</h3>
-                    <p class="text-sm text-gray-600">解锁更多步伐训练内容</p>
-                </div>
-                <div class="border border-gray-200 rounded-lg p-4">
-                    <h3 class="font-semibold text-gray-800">VIP会员</h3>
-                    <p class="text-sm text-gray-600">全部内容无限制访问</p>
+                <div class="border border-gray-200 rounded-lg p-4 bg-gradient-to-r from-purple-50 to-blue-50">
+                    <h3 class="font-semibold text-gray-800">会员</h3>
+                    <p class="text-sm text-gray-600">解锁所有高级步伐训练内容</p>
+                    <ul class="text-xs text-gray-500 mt-2 space-y-1">
+                        <li>• 访问所有付费步伐视频</li>
+                        <li>• 享受完整训练体验</li>
+                        <li>• 无限制观看所有内容</li>
+                    </ul>
                 </div>
             </div>
             
@@ -188,8 +206,74 @@
         </div>
     </div>
 
+    <!-- 用户个人页面模态框 -->
+    <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button id="close-profile-modal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            
+            <h2 class="text-xl font-bold text-gray-800 mb-4">个人中心</h2>
+            
+            <!-- 用户基本信息 -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                <div class="flex items-center space-x-3 mb-3">
+                    <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                        <span id="profile-avatar">U</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800" id="profile-username">用户名</h3>
+                        <p class="text-sm text-gray-500" id="profile-plan">免费用户</p>
+                    </div>
+                </div>
+                
+                <!-- 会员状态 -->
+                <div id="membership-status" class="border-t pt-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">会员状态</span>
+                        <span id="membership-badge" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">免费用户</span>
+                    </div>
+                    <div id="membership-expiry" class="mt-2 text-sm text-gray-500 hidden">
+                        到期时间：<span id="expiry-date">--</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 会员介绍 -->
+            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4">
+                <h3 class="font-semibold text-gray-800 mb-2">会员特权</h3>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• 解锁所有高级步伐训练内容</li>
+                    <li>• 无限制观看所有付费视频</li>
+                    <li>• 享受完整的羽毛球训练体验</li>
+                    <li>• 持续更新的训练内容</li>
+                </ul>
+                <div class="mt-3">
+                    <button id="profile-upgrade-btn" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-md text-sm transition duration-300">
+                        立即升级
+                    </button>
+                </div>
+            </div>
+            
+  
+            <!-- 免费用户可访问的步伐 -->
+            <div class="bg-green-50 rounded-lg p-4">
+                <h3 class="font-semibold text-gray-800 mb-2">免费内容</h3>
+                <p class="text-sm text-gray-600 mb-2">免费用户可以访问以下基础步伐：</p>
+                <ul class="text-xs text-gray-500 space-y-1">
+                    <li>• 平行启动基础步伐（1-2, 1-3, 1-4, 1-5）</li>
+                    <li>• 前后启动基础步伐（1-2, 1-3, 1-4, 1-5）</li>
+                    <li>• 所有基础场地的移动训练</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script src="supabase-config.js"></script>
     <script src="auth.js"></script>
+    <script src="step-config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
