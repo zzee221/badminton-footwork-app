@@ -49,10 +49,26 @@ class AuthManager {
             .single();
 
         if (data) {
-            this.currentSubscription = data;
+            // 检查订阅是否过期
+            const now = new Date();
+            const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
+            
+            if (expiresAt && expiresAt < now) {
+                // 订阅已过期，更新状态
+                await this.supabase
+                    .from('subscriptions')
+                    .update({ status: 'expired' })
+                    .eq('id', data.id);
+                
+                this.currentSubscription = null;
+            } else {
+                this.currentSubscription = data;
+            }
         } else {
             this.currentSubscription = null;
         }
+        
+        console.log('当前订阅状态:', this.currentSubscription);
     }
 
   
@@ -434,20 +450,7 @@ class AuthManager {
                 return;
             }
 
-            // 创建用户资料
-            if (data.user) {
-                const { error: profileError } = await this.supabase
-                    .from('profiles')
-                    .insert([{
-                        id: data.user.id,
-                        username: username,
-                        email: tempEmail
-                    }]);
-
-                if (profileError) {
-                    console.error('创建用户资料失败:', profileError);
-                }
-            }
+            // 用户资料由数据库触发器自动创建
 
             this.showMessage('auth-message', '注册成功！', 'success');
             setTimeout(() => {
@@ -507,9 +510,12 @@ class AuthManager {
                 return;
             }
 
-            // 计算过期时间
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + codeData.duration_days);
+            // 计算过期时间（永久会员为null）
+            let expiresAt = null;
+            if (codeData.plan_type === 'premium_30d') {
+                expiresAt = new Date();
+                expiresAt.setDate(expiresAt.getDate() + codeData.duration_days);
+            }
 
             // 创建订阅记录
             const { data: subscriptionData, error: subscriptionError } = await this.supabase
@@ -519,7 +525,7 @@ class AuthManager {
                     plan_type: codeData.plan_type,
                     status: 'active',
                     started_at: new Date().toISOString(),
-                    expires_at: expiresAt.toISOString()
+                    expires_at: expiresAt ? expiresAt.toISOString() : null
                 }]);
 
             if (subscriptionError) {
@@ -528,6 +534,12 @@ class AuthManager {
             }
 
             // 标记激活码为已使用
+            console.log('正在更新激活码状态:', {
+                id: codeData.id,
+                code: codeData.code,
+                user_id: this.currentUser.id
+            });
+            
             const { error: updateError } = await this.supabase
                 .from('activation_codes')
                 .update({
@@ -539,23 +551,11 @@ class AuthManager {
 
             if (updateError) {
                 console.error('更新激活码状态失败:', updateError);
+            } else {
+                console.log('激活码状态更新成功');
             }
 
-            // 记录激活历史
-            const { error: historyError } = await this.supabase
-                .from('activation_history')
-                .insert([{
-                    user_id: this.currentUser.id,
-                    code_id: codeData.id,
-                    plan_type: codeData.plan_type,
-                    expires_at: expiresAt.toISOString()
-                }]);
-
-            if (historyError) {
-                console.error('记录激活历史失败:', historyError);
-                // 如果记录历史失败，显示警告但不影响激活流程
-                console.warn('激活码已成功激活，但记录历史时出现问题');
-            }
+            // 激活历史由数据库触发器自动记录，无需手动处理
 
             this.showMessage('upgrade-message', '会员激活成功！', 'success');
             setTimeout(() => {
@@ -577,7 +577,7 @@ class AuthManager {
         const userPlan = this.currentSubscription ? this.currentSubscription.plan_type : 'free';
         
         // 会员可以访问所有内容
-        if (userPlan === 'premium' || userPlan === 'vip') {
+        if (userPlan === 'premium_30d' || userPlan === 'premium_lifetime') {
             return true;
         }
         
