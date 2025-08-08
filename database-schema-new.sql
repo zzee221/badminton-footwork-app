@@ -84,7 +84,7 @@ CREATE POLICY "Users can use activation codes" ON activation_codes FOR UPDATE US
 
 -- Activation_history表策略
 CREATE POLICY "Users can view own history" ON activation_history FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Service role can insert history" ON activation_history FOR INSERT USING (true);
+CREATE POLICY "Service role can insert history" ON activation_history FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can insert own history" ON activation_history FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- 删除已存在的触发器和函数
@@ -96,14 +96,31 @@ CREATE OR REPLACE FUNCTION log_activation_history()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.is_used = true AND OLD.is_used = false THEN
-        INSERT INTO activation_history (
-            user_id, code_id, activation_code, plan_type, duration_days, activated_at, expires_at
-        ) VALUES (
-            NEW.used_by, NEW.id, NEW.code, NEW.plan_type, 
-            CASE WHEN NEW.plan_type = 'premium_lifetime' THEN NULL ELSE NEW.duration_days END,
-            NOW(), 
-            CASE WHEN NEW.plan_type = 'premium_lifetime' THEN NULL ELSE NOW() + (NEW.duration_days || ' days')::INTERVAL END
-        );
+        -- 先尝试插入，如果失败则记录到日志表
+        BEGIN
+            INSERT INTO activation_history (
+                user_id, code_id, activation_code, plan_type, duration_days, activated_at, expires_at
+            ) VALUES (
+                NEW.used_by, NEW.id, NEW.code, NEW.plan_type, 
+                CASE WHEN NEW.plan_type = 'premium_lifetime' THEN NULL ELSE NEW.duration_days END,
+                NOW(), 
+                CASE WHEN NEW.plan_type = 'premium_lifetime' THEN NULL ELSE NOW() + (NEW.duration_days || ' days')::INTERVAL END
+            );
+        EXCEPTION WHEN OTHERS THEN
+            -- 如果插入失败，创建一个简单的日志记录
+            INSERT INTO activation_history (
+                user_id, code_id, activation_code, plan_type, duration_days, activated_at, expires_at, status
+            ) VALUES (
+                COALESCE(NEW.used_by, '00000000-0000-0000-0000-000000000000'), 
+                NEW.id, 
+                NEW.code, 
+                NEW.plan_type, 
+                CASE WHEN NEW.plan_type = 'premium_lifetime' THEN NULL ELSE NEW.duration_days END,
+                NOW(), 
+                CASE WHEN NEW.plan_type = 'premium_lifetime' THEN NULL ELSE NOW() + (NEW.duration_days || ' days')::INTERVAL END,
+                'error'
+            ) ON CONFLICT DO NOTHING;
+        END;
     END IF;
     RETURN NEW;
 END;

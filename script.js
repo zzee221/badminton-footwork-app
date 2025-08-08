@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', function() {
             currentStepType = this.value;
             updatePointVisibility();
+            renderStepList(); // 重新渲染步伐列表
         });
     });
 
@@ -107,54 +108,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 渲染步伐列表
     function renderStepList() {
-        const stepTypes = stepConfig.getStepTypes();
-        let html = '';
+        // 获取当前选择的步伐类型
+        const selectedStepType = document.querySelector('input[name="step-type"]:checked').value;
+        const config = stepConfig.getStepConfig(selectedStepType);
+        const steps = stepConfig.getSteps(selectedStepType);
+        
+        let html = `
+            <div class="step-type-section">
+                <h3 class="text-md font-semibold text-gray-700 mb-3">${config.name}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        `;
 
-        stepTypes.forEach(type => {
-            const config = stepConfig.getStepConfig(type);
-            const steps = stepConfig.getSteps(type);
+        Object.entries(steps).forEach(([sequence, step]) => {
+            const isFree = stepConfig.isStepFree(selectedStepType, sequence);
+            const hasAccess = checkStepAccess(selectedStepType, sequence);
+            const indicatorColor = isFree ? 'bg-green-500' : 'bg-purple-500';
+            const lockIcon = isFree ? '' : '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>';
+            
+            // 计算总视频数
+            const totalVideos = step.patterns.reduce((sum, pattern) => sum + pattern.videos.length, 0);
+            // 计算免费视频数
+            const freeVideos = step.patterns.reduce((sum, pattern) => sum + (pattern.isFree ? pattern.videos.length : 0), 0);
             
             html += `
-                <div class="step-type-section">
-                    <h3 class="text-md font-semibold text-gray-700 mb-3">${config.name}</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            `;
-
-            Object.entries(steps).forEach(([sequence, step]) => {
-                const isFree = stepConfig.isStepFree(type, sequence);
-                const indicatorColor = isFree ? 'bg-green-500' : 'bg-purple-500';
-                const lockIcon = isFree ? '' : '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>';
-                
-                // 计算总视频数
-                const totalVideos = step.patterns.reduce((sum, pattern) => sum + pattern.videos.length, 0);
-                // 计算免费视频数
-                const freeVideos = step.patterns.reduce((sum, pattern) => sum + (pattern.isFree ? pattern.videos.length : 0), 0);
-                
-                html += `
-                    <div class="step-item border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition duration-200 ${!isFree ? 'border-purple-200' : 'border-gray-200'}" 
-                         data-step-type="${type}" data-step-sequence="${sequence}">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-3 h-3 ${indicatorColor} rounded-full"></div>
-                                <span class="font-medium text-gray-800">${sequence}</span>
-                                ${lockIcon}
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <span class="text-xs text-gray-500">${totalVideos} 视频</span>
-                                ${freeVideos > 0 && freeVideos < totalVideos ? `<span class="text-xs text-green-600">${freeVideos} 免费</span>` : ''}
-                            </div>
+                <div class="step-item border rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition duration-200 ${!isFree ? 'border-purple-200' : 'border-gray-200'}" 
+                     data-step-type="${selectedStepType}" data-step-sequence="${sequence}">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 ${indicatorColor} rounded-full"></div>
+                            <span class="font-medium text-gray-800">${sequence}</span>
+                            ${lockIcon}
                         </div>
-                        <p class="text-sm text-gray-600">${step.name}</p>
-                        ${step.patterns.length > 1 ? `<div class="mt-1 text-xs text-gray-500">${step.patterns.length} 种模式</div>` : ''}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">${totalVideos} 视频</span>
+                            ${freeVideos > 0 && freeVideos < totalVideos ? `<span class="text-xs text-green-600">${freeVideos} 免费</span>` : ''}
+                        </div>
                     </div>
-                `;
-            });
-
-            html += `
-                    </div>
+                    <p class="text-sm text-gray-600">${step.name}</p>
+                    ${step.patterns.length > 1 ? `<div class="mt-1 text-xs text-gray-500">${step.patterns.length} 种模式</div>` : ''}
                 </div>
             `;
         });
+
+        html += `
+                </div>
+            </div>
+        `;
 
         stepList.innerHTML = html;
 

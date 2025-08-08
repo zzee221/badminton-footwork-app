@@ -93,10 +93,10 @@ class AuthManager {
         if (this.currentSubscription) {
             const planNames = {
                 'free': '免费用户',
-                'premium': '会员',
-                'vip': '会员'
+                'premium_30d': '30天会员',
+                'premium_lifetime': '永久会员'
             };
-            userPlan.textContent = planNames[this.currentSubscription.plan_type] || '免费用户';
+            userPlan.textContent = planNames[this.currentSubscription.plan_type] || '会员';
         } else {
             userPlan.textContent = '免费用户';
         }
@@ -310,15 +310,15 @@ class AuthManager {
         if (this.currentSubscription) {
             const planNames = {
                 'free': '免费用户',
-                'premium': '会员',
-                'vip': '会员'
+                'premium_30d': '30天会员',
+                'premium_lifetime': '永久会员'
             };
             
-            profilePlan.textContent = planNames[this.currentSubscription.plan_type] || '免费用户';
-            membershipBadge.textContent = planNames[this.currentSubscription.plan_type] || '免费用户';
+            profilePlan.textContent = planNames[this.currentSubscription.plan_type] || '会员';
+            membershipBadge.textContent = planNames[this.currentSubscription.plan_type] || '会员';
             
             // 设置会员徽章样式
-            if (this.currentSubscription.plan_type === 'premium' || this.currentSubscription.plan_type === 'vip') {
+            if (this.currentSubscription.plan_type === 'premium_30d' || this.currentSubscription.plan_type === 'premium_lifetime') {
                 membershipBadge.className = 'px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-600';
                 profileUpgradeBtn.style.display = 'none'; // 会员用户隐藏升级按钮
             } else {
