@@ -428,8 +428,8 @@ class AuthManager {
                 return;
             }
 
-            // 生成临时邮箱（基于用户名和时间戳）
-            const tempEmail = `${username}_${Date.now()}@temp-user.local`;
+            // 生成虚拟邮箱（基于用户名，使用标准测试域名）
+            const tempEmail = `${username.toLowerCase()}@badminton-step.local`;
             
             // 注册用户
             const { data, error } = await this.supabase.auth.signUp({
