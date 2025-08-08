@@ -1,0 +1,87 @@
+.point {
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.point:hover {
+    transform: translate(-50%, -50%) scale(1.2);
+    background-color: #ef4444;
+    z-index: 10;
+}
+
+.point.active {
+    background-color: #10b981;
+    transform: translate(-50%, -50%) scale(1.2);
+}
+
+#modal {
+    transition: opacity 0.3s ease;
+}
+
+#modal-content {
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#step-video {
+    max-height: 400px;
+}
+
+@media (max-width: 768px) {
+    .point {
+        width: 6vw;
+        height: 6vw;
+        font-size: 3vw;
+    }
+
+    #step-video {
+        max-height: 300px;
+    }
+}
+
+/* 调整点位位置，使其更准确地对应场地位置 */
+/* 这些位置需要根据实际图片进行微调 */
+.point[data-point="1"] { /* 中场 */
+    top: 50% !important;
+    left: 50% !important;
+}
+
+.point[data-point="2"] { /* 反手网前 */
+    top: 35% !important;
+    left: 25% !important;
+}
+
+.point[data-point="3"] { /* 正手网前 */
+    top: 35% !important;
+    left: 75% !important;
+}
+
+.point[data-point="4"] { /* 头顶后场 */
+    top: 75% !important;
+    left: 25% !important;
+}
+
+.point[data-point="5"] { /* 正手后场 */
+    top: 75% !important;
+    left: 75% !important;
+}
+
+.point[data-point="6"] { /* 反手中场 */
+    top: 50% !important;
+    left: 25% !important;
+}
+
+.point[data-point="7"] { /* 正手中场 */
+    top: 50% !important;
+    left: 75% !important;
+}

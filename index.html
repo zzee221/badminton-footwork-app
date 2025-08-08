@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>羽毛球步伐示意图</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">羽毛球步伐示意图</h1>
+    <p class="text-gray-600 mb-6 text-center max-w-2xl">点击场地中的点位选择起点和终点，查看对应的羽毛球步伐演示。可以选择不同的启动方式。</p>
+
+    <!-- 步伐类型选择器 -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6 max-w-4xl w-full">
+        <h2 class="text-lg font-semibold text-gray-700 mb-3">选择步伐类型</h2>
+        <div class="flex flex-wrap gap-4">
+            <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" name="step-type" value="parallel" checked class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                <span class="ml-2 text-gray-700">平行启动</span>
+            </label>
+            <label class="inline-flex items-center cursor-pointer">
+                <input type="radio" name="step-type" value="forward-backward" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                <span class="ml-2 text-gray-700">前后启动</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="relative bg-white rounded-lg shadow-lg overflow-hidden max-w-4xl w-full">
+        <!-- 场地示意图容器 -->
+        <div id="court-container" class="relative w-full">
+            <img src="羽毛球场地半场示意图.jpg" alt="羽毛球场地半场示意图" class="w-full h-auto">
+
+            <!-- 点位标记 -->
+            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="1" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">1</div>
+            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="2" style="top: 30%; left: 20%; transform: translate(-50%, -50%);">2</div>
+            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="3" style="top: 30%; left: 80%; transform: translate(-50%, -50%);">3</div>
+            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="4" style="top: 70%; left: 20%; transform: translate(-50%, -50%);">4</div>
+            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="5" style="top: 70%; left: 80%; transform: translate(-50%, -50%);">5</div>
+            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="6" style="top: 50%; left: 20%; transform: translate(-50%, -50%);">6</div>
+            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="7" style="top: 50%; left: 80%; transform: translate(-50%, -50%);">7</div>
+        </div>
+    </div>
+
+    <!-- 浮窗 -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-4 relative">
+            <button id="close-modal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h2 id="modal-title" class="text-xl font-bold text-gray-800 mb-4">步伐演示</h2>
+            <div id="video-container" class="flex items-center justify-center py-4 relative">
+                <button id="prev-gif" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-opacity-70 transition duration-300 z-10 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+            <video id="step-video" src="" alt="步伐演示视频" class="max-w-full h-auto" controls loop autoplay muted></video>
+                <button id="next-gif" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-opacity-70 transition duration-300 z-10 hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+                <p id="video-notice" class="text-gray-500 mt-2 text-center hidden">该步伐视频暂未提供</p>
+                <div id="video-counter" class="text-gray-500 mt-1 text-center hidden">1/1</div>
+            </div>
+            <div id="step-description" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="font-semibold text-gray-700 mb-2">步伐说明</h3>
+                <p id="description-text" class="text-gray-600">选择点位后将显示详细的步伐说明...</p>
+            </div>
+            <div class="text-center mt-4">
+                <button id="close-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-300">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
