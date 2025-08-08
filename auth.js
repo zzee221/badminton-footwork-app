@@ -53,6 +53,7 @@ class AuthManager {
         }
     }
 
+  
     // 显示用户菜单
     showUserMenu() {
         const loginBtn = document.getElementById('login-btn');
@@ -74,8 +75,8 @@ class AuthManager {
         if (this.currentSubscription) {
             const planNames = {
                 'free': '免费用户',
-                'premium': '高级会员',
-                'vip': 'VIP会员'
+                'premium': '会员',
+                'vip': '会员'
             };
             userPlan.textContent = planNames[this.currentSubscription.plan_type] || '免费用户';
         } else {
@@ -112,11 +113,22 @@ class AuthManager {
             });
         }
 
+        // 用户头像按钮（打开个人页面）
+        const avatarBtn = document.getElementById('user-avatar-btn');
+        if (avatarBtn) {
+            avatarBtn.addEventListener('click', () => {
+                this.showProfileModal();
+            });
+        }
+
         // 认证模态框事件
         this.bindAuthModalEvents();
 
         // 升级模态框事件
         this.bindUpgradeModalEvents();
+
+        // 个人页面模态框事件
+        this.bindProfileModalEvents();
     }
 
     // 绑定认证模态框事件
@@ -210,6 +222,33 @@ class AuthManager {
         });
     }
 
+    // 绑定个人页面模态框事件
+    bindProfileModalEvents() {
+        const profileModal = document.getElementById('profile-modal');
+        const closeProfileModal = document.getElementById('close-profile-modal');
+        const profileUpgradeBtn = document.getElementById('profile-upgrade-btn');
+
+        // 关闭模态框
+        closeProfileModal.addEventListener('click', () => {
+            profileModal.classList.add('hidden');
+        });
+
+        // 点击外部关闭
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) {
+                profileModal.classList.add('hidden');
+            }
+        });
+
+        // 升级按钮
+        if (profileUpgradeBtn) {
+            profileUpgradeBtn.addEventListener('click', () => {
+                profileModal.classList.add('hidden');
+                this.showUpgradeModal();
+            });
+        }
+    }
+
     // 显示认证模态框
     showAuthModal() {
         const authModal = document.getElementById('auth-modal');
@@ -222,6 +261,66 @@ class AuthManager {
         const upgradeModal = document.getElementById('upgrade-modal');
         upgradeModal.classList.remove('hidden');
         this.clearUpgradeMessage();
+    }
+
+    // 显示个人页面模态框
+    showProfileModal() {
+        const profileModal = document.getElementById('profile-modal');
+        profileModal.classList.remove('hidden');
+        this.updateProfileModal();
+    }
+
+    // 更新个人页面信息
+    async updateProfileModal() {
+        const profileAvatar = document.getElementById('profile-avatar');
+        const profileUsername = document.getElementById('profile-username');
+        const profilePlan = document.getElementById('profile-plan');
+        const membershipBadge = document.getElementById('membership-badge');
+        const membershipExpiry = document.getElementById('membership-expiry');
+        const expiryDate = document.getElementById('expiry-date');
+        const profileUpgradeBtn = document.getElementById('profile-upgrade-btn');
+
+        // 设置用户信息
+        if (this.currentUser.profile) {
+            profileUsername.textContent = this.currentUser.profile.username || '用户';
+            profileAvatar.textContent = this.currentUser.profile.username ? 
+                this.currentUser.profile.username.charAt(0).toUpperCase() : 
+                'U';
+        }
+
+        // 设置会员信息
+        if (this.currentSubscription) {
+            const planNames = {
+                'free': '免费用户',
+                'premium': '会员',
+                'vip': '会员'
+            };
+            
+            profilePlan.textContent = planNames[this.currentSubscription.plan_type] || '免费用户';
+            membershipBadge.textContent = planNames[this.currentSubscription.plan_type] || '免费用户';
+            
+            // 设置会员徽章样式
+            if (this.currentSubscription.plan_type === 'premium' || this.currentSubscription.plan_type === 'vip') {
+                membershipBadge.className = 'px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-600';
+                profileUpgradeBtn.style.display = 'none'; // 会员用户隐藏升级按钮
+            } else {
+                membershipBadge.className = 'px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600';
+                profileUpgradeBtn.style.display = 'block';
+            }
+
+            // 显示到期时间
+            if (this.currentSubscription.expires_at) {
+                const expiryDateObj = new Date(this.currentSubscription.expires_at);
+                expiryDate.textContent = expiryDateObj.toLocaleDateString('zh-CN');
+                membershipExpiry.classList.remove('hidden');
+            }
+        } else {
+            profilePlan.textContent = '免费用户';
+            membershipBadge.textContent = '免费用户';
+            membershipBadge.className = 'px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600';
+            membershipExpiry.classList.add('hidden');
+            profileUpgradeBtn.style.display = 'block';
+        }
     }
 
     // 显示消息
@@ -288,12 +387,12 @@ class AuthManager {
 
     // 注册
     async register() {
-        const username = document.getElementById('register-username').value;
         const email = document.getElementById('register-email').value;
+        const username = document.getElementById('register-username').value;
         const password = document.getElementById('register-password').value;
 
-        if (!username || !email || !password) {
-            this.showMessage('auth-message', '请填写所有字段', 'error');
+        if (!email || !username || !password) {
+            this.showMessage('auth-message', '请填写邮箱、用户名和密码', 'error');
             return;
         }
 
@@ -326,10 +425,11 @@ class AuthManager {
                 }
             }
 
-            this.showMessage('auth-message', '注册成功！请检查邮箱验证', 'success');
+            this.showMessage('auth-message', '注册成功！请检查邮箱验证邮件', 'success');
             setTimeout(() => {
                 document.getElementById('auth-modal').classList.add('hidden');
-            }, 2000);
+                this.checkUserStatus();
+            }, 1000);
 
         } catch (error) {
             this.showMessage('auth-message', '注册失败，请重试', 'error');
@@ -429,6 +529,10 @@ class AuthManager {
 
             if (historyError) {
                 console.error('记录激活历史失败:', historyError);
+                // 如果记录历史失败，显示警告但不影响激活流程
+                console.warn('激活码已成功激活，但记录历史时出现问题');
+            } else {
+                console.log('激活历史记录成功');
             }
 
             this.showMessage('upgrade-message', '会员激活成功！', 'success');
@@ -446,10 +550,16 @@ class AuthManager {
     hasPermission(requiredPlan = 'free') {
         if (!this.currentUser) return false;
 
-        const planHierarchy = { 'free': 0, 'premium': 1, 'vip': 2 };
+        // 简化权限：只有免费和会员两种
         const userPlan = this.currentSubscription ? this.currentSubscription.plan_type : 'free';
         
-        return planHierarchy[userPlan] >= planHierarchy[requiredPlan];
+        // 会员可以访问所有内容
+        if (userPlan === 'premium' || userPlan === 'vip') {
+            return true;
+        }
+        
+        // 免费用户只能访问免费内容
+        return requiredPlan === 'free';
     }
 
     // 获取用户信息
