@@ -15,7 +15,8 @@
       "Bash(findstr:*)",
       "Bash(grep:*)",
       "WebFetch(domain:supabase.com)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "WebFetch(domain:deploy-preview-1--badminton-footwork-app.netlify.app)"
     ],
     "deny": []
   }

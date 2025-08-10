@@ -76,16 +76,26 @@ document.addEventListener('DOMContentLoaded', async function() {
         showLoading();
         try {
             console.log('开始初始化应用...');
+            console.log('当前时间:', new Date().toISOString());
             
             // 检查 Supabase 连接
             if (!window.supabase) {
                 throw new Error('Supabase 未初始化');
             }
             
+            console.log('Supabase 客户端存在:', typeof window.supabase);
+            
             // 检查数据库配置
             if (!window.databaseStepConfig) {
                 throw new Error('数据库配置未初始化');
             }
+            
+            console.log('数据库配置存在:', typeof window.databaseStepConfig);
+            
+            // 测试数据库连接
+            console.log('测试数据库连接...');
+            const testConnection = await window.supabase.from('step_types').select('count').single();
+            console.log('数据库连接测试结果:', testConnection);
             
             console.log('Supabase 连接正常');
             
@@ -103,6 +113,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             console.log('应用初始化完成');
         } catch (error) {
             console.error('应用初始化失败:', error);
+            console.error('错误堆栈:', error.stack);
             showError(`初始化失败: ${error.message}`);
         } finally {
             hideLoading();
@@ -112,29 +123,58 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 初始化步伐类型选项
     async function initializeStepTypeOptions() {
         try {
-            const stepTypes = await window.databaseStepConfig.getStepTypes();
+            console.log('开始获取步伐类型...');
             const container = document.querySelector('.flex.flex-wrap.gap-4');
+            console.log('找到容器元素:', container);
             
-            // 清空现有选项
-            container.innerHTML = '';
-            
-            // 添加数据库中的步伐类型
-            stepTypes.forEach((type, index) => {
-                const label = document.createElement('label');
-                label.className = 'inline-flex items-center cursor-pointer';
-                label.innerHTML = `
-                    <input type="radio" name="step-type" value="${type.type_key}" ${index === 0 ? 'checked' : ''} class="sr-only peer">
+            // 首先显示默认选项，确保用户至少能看到选项
+            container.innerHTML = `
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="step-type" value="parallel" checked class="sr-only peer">
                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                    <span class="ml-2 text-gray-700">${type.name}</span>
-                `;
-                container.appendChild(label);
-            });
-
-            // 重新绑定事件
+                    <span class="ml-2 text-gray-700">平行启动</span>
+                </label>
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="step-type" value="forward-backward" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                    <span class="ml-2 text-gray-700">前后启动</span>
+                </label>
+            `;
+            
+            // 绑定事件
             bindStepTypeEvents();
+            
+            // 尝试从数据库获取步伐类型
+            try {
+                const stepTypes = await window.databaseStepConfig.getStepTypes();
+                console.log('获取到的步伐类型:', stepTypes);
+                
+                // 如果成功获取到数据，替换为数据库中的选项
+                if (stepTypes && stepTypes.length > 0) {
+                    console.log('使用数据库中的步伐类型...');
+                    container.innerHTML = '';
+                    stepTypes.forEach((type, index) => {
+                        console.log(`添加步伐类型: ${type.name} (${type.type_key})`);
+                        const label = document.createElement('label');
+                        label.className = 'inline-flex items-center cursor-pointer';
+                        label.innerHTML = `
+                            <input type="radio" name="step-type" value="${type.type_key}" ${index === 0 ? 'checked' : ''} class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                            <span class="ml-2 text-gray-700">${type.name}</span>
+                        `;
+                        container.appendChild(label);
+                    });
+                    bindStepTypeEvents();
+                }
+            } catch (dbError) {
+                console.warn('数据库加载失败，使用默认选项:', dbError);
+                // 保持默认选项不变
+            }
+            
+            console.log('步伐类型选项初始化完成');
         } catch (error) {
             console.error('初始化步伐类型选项失败:', error);
-            // 如果数据库加载失败，使用默认选项
+            // 如果完全失败，至少显示默认选项
             const container = document.querySelector('.flex.flex-wrap.gap-4');
             container.innerHTML = `
                 <label class="inline-flex items-center cursor-pointer">
@@ -214,6 +254,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 检查步伐访问权限
     async function checkStepAccess(stepType, sequence) {
         try {
+            // 如果数据库配置不可用，使用默认的免费步伐判断
+            if (!window.databaseStepConfig) {
+                console.warn('数据库配置不可用，使用默认权限判断');
+                return isStepFreeByDefault(stepType, sequence);
+            }
+            
             const stepInfo = await window.databaseStepConfig.getStepInfo(stepType, sequence);
             
             if (!stepInfo) return false;
@@ -232,9 +278,17 @@ document.addEventListener('DOMContentLoaded', async function() {
             return false;
         } catch (error) {
             console.error('检查步伐访问权限失败:', error);
-            // 如果检查失败，默认允许访问免费内容
-            return true;
+            // 如果检查失败，使用默认的免费步伐判断
+            return isStepFreeByDefault(stepType, sequence);
         }
+    }
+
+    // 默认的免费步伐判断逻辑
+    function isStepFreeByDefault(stepType, sequence) {
+        console.log('使用默认权限判断:', stepType, sequence);
+        // 默认免费步伐：1-2, 1-3, 1-4, 1-5
+        const freeSteps = ['1-2', '1-3', '1-4', '1-5'];
+        return freeSteps.includes(sequence);
     }
 
     // 显示视频模态框
@@ -324,11 +378,21 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 渲染步伐列表
     async function renderStepList() {
         try {
+            console.log('渲染步伐列表，当前类型:', currentStepType);
+            
+            // 如果数据库配置不可用，使用默认步伐列表
+            if (!window.databaseStepConfig) {
+                console.log('数据库配置不可用，使用默认步伐列表');
+                renderDefaultStepList();
+                return;
+            }
+            
             const combinations = await window.databaseStepConfig.getAllStepCombinations(currentStepType);
             const currentCombinations = combinations[currentStepType];
             
             if (!currentCombinations) {
-                stepList.innerHTML = '<div class="text-gray-500">暂无步伐数据</div>';
+                console.log('未找到步伐数据，使用默认列表');
+                renderDefaultStepList();
                 return;
             }
 
@@ -362,8 +426,69 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         } catch (error) {
             console.error('渲染步伐列表失败:', error);
-            stepList.innerHTML = '<div class="text-red-500">加载步伐列表失败</div>';
+            renderDefaultStepList();
         }
+    }
+
+    // 渲染默认步伐列表
+    function renderDefaultStepList() {
+        console.log('渲染默认步伐列表');
+        const defaultSteps = getDefaultSteps(currentStepType);
+        
+        let html = '';
+        for (const step of defaultSteps) {
+            const hasAccess = isStepFreeByDefault(currentStepType, step.sequence);
+            const accessBadge = step.isFree ? 
+                '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">免费</span>' :
+                '<span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">会员</span>';
+
+            html += `
+                <div class="step-item border rounded-lg p-3 hover:shadow-md transition-shadow ${hasAccess ? 'cursor-pointer hover:bg-gray-50' : 'opacity-60'}" 
+                     data-sequence="${step.sequence}" ${hasAccess ? '' : 'data-locked="true"'}>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-semibold text-gray-800">${step.name}</h3>
+                        ${accessBadge}
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">${step.description}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">${step.patternName}</span>
+                        ${!hasAccess ? '<span class="text-xs text-purple-600">升级会员解锁</span>' : '<span class="text-xs text-green-600">点击观看</span>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        stepList.innerHTML = html || '<div class="text-gray-500">暂无步伐数据</div>';
+        bindStepListEvents();
+    }
+
+    // 获取默认步伐数据
+    function getDefaultSteps(stepType) {
+        const parallelSteps = [
+            { sequence: '1-2', name: '中心到反手网前', description: '从中心位置(1)到反手网前(2)的步伐', patternName: '基础步伐', isFree: true },
+            { sequence: '1-3', name: '中心到正手网前', description: '从中心位置(1)到正手网前(3)的步伐', patternName: '基础步伐', isFree: true },
+            { sequence: '1-4', name: '中心到头顶后场', description: '从中心位置(1)到头顶后场(4)的步伐', patternName: '基础步伐', isFree: true },
+            { sequence: '1-5', name: '中心到正手后场', description: '从中心位置(1)到正手后场(5)的步伐', patternName: '基础步伐', isFree: true },
+            { sequence: '1-6', name: '中心到反手中场', description: '从中心位置(1)到反手中场(6)的步伐', patternName: '基础步伐', isFree: false },
+            { sequence: '1-7', name: '中心到正手中场', description: '从中心位置(1)到正手中场(7)的步伐', patternName: '基础步伐', isFree: false }
+        ];
+
+        const forwardBackwardSteps = [
+            { sequence: '1-2', name: '中心到反手网前', description: '从中心位置(1)到反手网前(2)的步伐', patternName: '基础步伐', isFree: true },
+            { sequence: '1-3', name: '中心到正手网前', description: '从中心位置(1)到正手网前(3)的步伐', patternName: '基础步伐', isFree: true },
+            { sequence: '1-4', name: '中心到头顶后场', description: '从中心位置(1)到头顶后场(4)的步伐', patternName: '基础步伐', isFree: true },
+            { sequence: '1-5', name: '中心到正手后场', description: '从中心位置(1)到正手后场(5)的步伐', patternName: '基础步伐', isFree: true },
+            { sequence: '2-4', name: '反手网前到头顶后场', description: '从反手网前(2)到头顶后场(4)的步伐', patternName: '基础步伐', isFree: false },
+            { sequence: '2-5', name: '反手网前到正手后场', description: '从反手网前(2)到正手后场(5)的步伐', patternName: '基础步伐', isFree: false },
+            { sequence: '3-4', name: '正手网前到头顶后场', description: '从正手网前(3)到头顶后场(4)的步伐', patternName: '基础步伐', isFree: false },
+            { sequence: '3-5', name: '正手网前到正手后场', description: '从正手网前(3)到正手后场(5)的步伐', patternName: '基础步伐', isFree: false },
+            { sequence: '4-2', name: '头顶后场到反手网前', description: '从头顶后场(4)到反手网前(2)的步伐', patternName: '基础步伐', isFree: false },
+            { sequence: '4-3', name: '头顶后场到正手网前', description: '从头顶后场(4)到正手网前(3)的步伐', patternName: '基础步伐', isFree: false },
+            { sequence: '5-2', name: '正手后场到反手网前', description: '从正手后场(5)到反手网前(2)的步伐', patternName: '基础步伐', isFree: false },
+            { sequence: '5-3', name: '正手后场到正手网前', description: '从正手后场(5)到正手网前(3)的步伐', patternName: '基础步伐', isFree: false }
+        ];
+
+        return stepType === 'parallel' ? parallelSteps : forwardBackwardSteps;
     }
 
     // 绑定步伐列表点击事件
