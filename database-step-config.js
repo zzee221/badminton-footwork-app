@@ -143,19 +143,31 @@ class DatabaseStepConfig {
     // 检查步伐是否免费
     async isStepFree(typeKey, sequence) {
         try {
+            // 先获取类型ID
+            const { data: typeData, error: typeError } = await this.supabase
+                .from('step_types')
+                .select('id')
+                .eq('type_key', typeKey)
+                .single();
+
+            if (typeError) {
+                console.error('获取步伐类型失败:', typeError);
+                return false;
+            }
+
+            // 再检查步伐组合是否免费
             const { data, error } = await this.supabase
                 .from('step_combinations')
                 .select('is_free')
                 .eq('sequence', sequence)
-                .eq('step_type_id', (await this.supabase
-                    .from('step_types')
-                    .select('id')
-                    .eq('type_key', typeKey)
-                    .single()
-                ).data?.id)
+                .eq('step_type_id', typeData.id)
                 .single();
 
-            if (error) return false;
+            if (error) {
+                console.error('检查步伐免费状态失败:', error);
+                return false;
+            }
+            
             return data?.is_free || false;
         } catch (error) {
             console.error('检查步伐免费状态失败:', error);

@@ -75,17 +75,35 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function initializeApp() {
         showLoading();
         try {
+            console.log('开始初始化应用...');
+            
+            // 检查 Supabase 连接
+            if (!window.supabase) {
+                throw new Error('Supabase 未初始化');
+            }
+            
+            // 检查数据库配置
+            if (!window.databaseStepConfig) {
+                throw new Error('数据库配置未初始化');
+            }
+            
+            console.log('Supabase 连接正常');
+            
             // 初始化步伐类型选项
+            console.log('初始化步伐类型选项...');
             await initializeStepTypeOptions();
+            console.log('步伐类型选项初始化完成');
             
             // 初始化点位可见性和步伐列表
             updatePointVisibility();
+            console.log('渲染步伐列表...');
             await renderStepList();
+            console.log('步伐列表渲染完成');
             
             console.log('应用初始化完成');
         } catch (error) {
             console.error('应用初始化失败:', error);
-            showError('初始化失败，请刷新页面重试');
+            showError(`初始化失败: ${error.message}`);
         } finally {
             hideLoading();
         }
@@ -97,10 +115,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             const stepTypes = await window.databaseStepConfig.getStepTypes();
             const container = document.querySelector('.flex.flex-wrap.gap-4');
             
-            // 清空现有选项（保留第一个选项）
-            const firstOption = container.querySelector('label');
+            // 清空现有选项
             container.innerHTML = '';
-            container.appendChild(firstOption);
             
             // 添加数据库中的步伐类型
             stepTypes.forEach((type, index) => {
@@ -108,10 +124,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 label.className = 'inline-flex items-center cursor-pointer';
                 label.innerHTML = `
                     <input type="radio" name="step-type" value="${type.type_key}" ${index === 0 ? 'checked' : ''} class="sr-only peer">
-                    <div class="w-4 h-4 border-2 border-gray-300 rounded-full peer-checked:border-blue-500 peer-checked:bg-blue-500 transition-all duration-200 flex items-center justify-center">
-                        <div class="w-2 h-2 bg-white rounded-full opacity-0 peer-checked:opacity-100 transition-opacity duration-200"></div>
-                    </div>
-                    <span class="ml-2 text-gray-700 font-medium">${type.name}</span>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                    <span class="ml-2 text-gray-700">${type.name}</span>
                 `;
                 container.appendChild(label);
             });
@@ -120,6 +134,21 @@ document.addEventListener('DOMContentLoaded', async function() {
             bindStepTypeEvents();
         } catch (error) {
             console.error('初始化步伐类型选项失败:', error);
+            // 如果数据库加载失败，使用默认选项
+            const container = document.querySelector('.flex.flex-wrap.gap-4');
+            container.innerHTML = `
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="step-type" value="parallel" checked class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                    <span class="ml-2 text-gray-700">平行启动</span>
+                </label>
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="radio" name="step-type" value="forward-backward" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                    <span class="ml-2 text-gray-700">前后启动</span>
+                </label>
+            `;
+            bindStepTypeEvents();
         }
     }
 
@@ -189,23 +218,22 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             if (!stepInfo) return false;
             
-            // 检查是否有任何可访问的模式
-            const accessiblePatterns = stepInfo.patterns.filter(pattern => {
-                // 如果是免费模式，所有人都可以访问
-                if (pattern.isFree) return true;
-                
-                // 如果是付费模式，检查用户权限
-                if (window.auth && window.auth.isPremiumUser()) {
-                    return true;
-                }
-                
-                return false;
-            });
-
-            return accessiblePatterns.length > 0;
+            // 检查步伐组合是否免费
+            const isStepFree = await window.databaseStepConfig.isStepFree(stepType, sequence);
+            
+            // 如果步伐免费，所有人都可以访问
+            if (isStepFree) return true;
+            
+            // 如果步伐付费，检查用户权限
+            if (window.auth && window.auth.isPremiumUser()) {
+                return true;
+            }
+            
+            return false;
         } catch (error) {
             console.error('检查步伐访问权限失败:', error);
-            return false;
+            // 如果检查失败，默认允许访问免费内容
+            return true;
         }
     }
 
@@ -305,8 +333,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
 
             let html = '';
-            currentCombinations.combinations.forEach((combo, index) => {
-                const hasAccess = combo.isFree || (window.auth && window.auth.isPremiumUser());
+            for (const combo of currentCombinations.combinations) {
+                const hasAccess = await checkStepAccess(currentStepType, combo.sequence);
                 const accessBadge = combo.isFree ? 
                     '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">免费</span>' :
                     '<span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">会员</span>';
@@ -325,7 +353,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                         </div>
                     </div>
                 `;
-            });
+            }
 
             stepList.innerHTML = html || '<div class="text-gray-500">暂无步伐数据</div>';
 
