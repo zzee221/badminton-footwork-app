@@ -14,7 +14,8 @@
       "Bash(node:*)",
       "Bash(findstr:*)",
       "Bash(grep:*)",
-      "WebFetch(domain:supabase.com)"
+      "WebFetch(domain:supabase.com)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }
