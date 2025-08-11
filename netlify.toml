@@ -1,0 +1,66 @@
+# Netlify 配置文件
+# 创建时间：2025-08-10
+
+[build]
+  publish = "."
+  command = "# 静态站点，无需构建命令"
+
+[build.environment]
+  # 生产环境变量（在 Netlify Dashboard 中设置）
+  SUPABASE_URL = "https://mkegxptdoteekylespbp.supabase.co"
+  SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZWd4cHRkb3RlZWt5bGVzcGJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2MTU4NzUsImV4cCI6MjA3MDE5MTg3NX0.EPOail2fXILEEvXRr9I8v_wBZQ5vj61OnOuVG8y_-G4"
+
+# 开发环境配置
+[dev]
+  command = "# 开发服务器配置"
+  port = 3000
+  publish = "."
+
+# 部署预览配置
+[context.deploy-preview]
+  # 预览环境可以使用相同的环境变量
+  # 或者设置为特定的测试数据库
+  SUPABASE_URL = "https://mkegxptdoteekylespbp.supabase.co"
+  SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZWd4cHRkb3RlZWt5bGVzcGJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2MTU4NzUsImV4cCI6MjA3MDE5MTg3NX0.EPOail2fXILEEvXRr9I8v_wBZQ5vj61OnOuVG8y_-G4"
+
+# 生产环境配置
+[context.production]
+  # 生产环境使用正式数据库
+  SUPABASE_URL = "https://mkegxptdoteekylespbp.supabase.co"
+  SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZWd4cHRkb3RlZWt5bGVzcGJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2MTU4NzUsImV4cCI6MjA3MDE5MTg3NX0.EPOail2fXILEEvXRr9I8v_wBZQ5vj61OnOuVG8y_-G4"
+
+# 分支部署配置
+[context.branch-deploy]
+  # 分支部署使用测试数据库配置
+  SUPABASE_URL = "https://mkegxptdoteekylespbp.supabase.co"
+  SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1rZWd4cHRkb3RlZWt5bGVzcGJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ2MTU4NzUsImV4cCI6MjA3MDE5MTg3NX0.EPOail2fXILEEvXRr9I8v_wBZQ5vj61OnOuVG8y_-G4"
+
+# 重定向和头部配置
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# 静态文件缓存
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "*.mp4"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
