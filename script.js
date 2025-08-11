@@ -345,7 +345,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 显示对应的步伐说明
         if (stepInfo) {
-            descriptionText.textContent = stepInfo.description;
+            // 获取当前pattern的描述
+            const currentPattern = stepInfo.patterns[currentVideoIndex];
+            let description = '';
+            
+            if (currentPattern && currentPattern.description) {
+                // 显示当前pattern的独立描述
+                description = `<strong>${currentPattern.name}：</strong>${currentPattern.description}`;
+            } else {
+                // 回退到整体描述
+                description = stepInfo.description;
+            }
+            
+            // 添加整体描述（可选）
+            if (stepInfo.patterns.length > 1 && currentPattern.description) {
+                description += `<br><br><em>整体描述：${stepInfo.description}</em>`;
+            }
             
             // 如果有多种模式，添加模式信息
             if (stepInfo.patterns.length > 1) {
@@ -355,11 +370,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (accessiblePatterns.length > 0) {
                     const patternNames = accessiblePatterns.map(p => p.name).join('、');
-                    descriptionText.innerHTML += `<br><br><strong>可用模式：</strong>${patternNames}`;
+                    description += `<br><br><strong>可用模式：</strong>${patternNames}`;
                 }
             }
+            
+            descriptionText.innerHTML = description;
         } else {
-            descriptionText.textContent = '选择两个点位后，将显示对应的步伐说明。步伐是羽毛球运动的基础，正确的步伐能够帮助球员快速到达击球位置，提高击球质量。';
+            descriptionText.textContent = '选择两个点位后，将显示对应的步伐说明。步伐是羽毛球步伐的基础，正确的步伐能够帮助球员快速到达击球位置，提高击球质量。';
         }
 
         // 更新计数器
