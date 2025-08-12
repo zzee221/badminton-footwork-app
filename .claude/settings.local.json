@@ -14,7 +14,9 @@
       "Bash(node:*)",
       "Bash(findstr:*)",
       "Bash(grep:*)",
-      "WebFetch(domain:supabase.com)"
+      "WebFetch(domain:supabase.com)",
+      "Bash(gh repo create:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }

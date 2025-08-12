@@ -491,7 +491,7 @@ class AuthManager {
         }
 
         try {
-            // 验证激活码
+            // 验证激活码并立即锁定（防止并发使用）
             const { data: codeData, error: codeError } = await this.supabase
                 .from('activation_codes')
                 .select('*')
@@ -507,6 +507,22 @@ class AuthManager {
             // 检查激活码是否过期
             if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
                 this.showMessage('upgrade-message', '激活码已过期', 'error');
+                return;
+            }
+
+            // 立即标记激活码为使用中，防止重复使用
+            const { error: lockError } = await this.supabase
+                .from('activation_codes')
+                .update({
+                    is_used: true,
+                    used_by: this.currentUser.id,
+                    used_at: new Date().toISOString()
+                })
+                .eq('id', codeData.id)
+                .eq('is_used', false); // 确保还是未使用状态
+
+            if (lockError) {
+                this.showMessage('upgrade-message', '激活码已被其他用户使用', 'error');
                 return;
             }
 
@@ -533,29 +549,24 @@ class AuthManager {
                 return;
             }
 
-            // 标记激活码为已使用
-            console.log('正在更新激活码状态:', {
-                id: codeData.id,
-                code: codeData.code,
-                user_id: this.currentUser.id
-            });
-            
-            const { error: updateError } = await this.supabase
-                .from('activation_codes')
-                .update({
-                    is_used: true,
-                    used_by: this.currentUser.id,
-                    used_at: new Date().toISOString()
-                })
-                .eq('id', codeData.id);
-
-            if (updateError) {
-                console.error('更新激活码状态失败:', updateError);
-            } else {
-                console.log('激活码状态更新成功');
+            // 手动插入激活历史记录（确保记录被保存）
+            try {
+                await this.supabase
+                    .from('activation_history')
+                    .insert([{
+                        user_id: this.currentUser.id,
+                        code_id: codeData.id,
+                        activation_code: codeData.code,
+                        plan_type: codeData.plan_type,
+                        duration_days: codeData.duration_days,
+                        activated_at: new Date().toISOString(),
+                        expires_at: expiresAt ? expiresAt.toISOString() : null,
+                        status: 'active'
+                    }]);
+            } catch (historyError) {
+                console.error('插入激活历史失败:', historyError);
+                // 不影响主流程，只记录日志
             }
-
-            // 激活历史由数据库触发器自动记录，无需手动处理
 
             this.showMessage('upgrade-message', '会员激活成功！', 'success');
             setTimeout(() => {
