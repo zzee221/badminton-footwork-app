@@ -513,12 +513,6 @@ class AuthManager {
             }
 
             // 立即标记激活码为使用中，防止重复使用
-            console.log('尝试锁定激活码:', {
-                id: codeData.id,
-                code: codeData.code,
-                user_id: this.currentUser.id
-            });
-            
             const { error: lockError } = await this.supabase
                 .from('activation_codes')
                 .update({
@@ -530,11 +524,9 @@ class AuthManager {
                 .eq('is_used', false); // 确保还是未使用状态
 
             if (lockError) {
-                console.error('锁定激活码失败:', lockError);
                 this.showMessage('upgrade-message', '激活码已被其他用户使用', 'error');
                 return;
             }
-            console.log('激活码锁定成功');
 
             // 计算过期时间（永久会员为null）
             let expiresAt = null;
@@ -597,7 +589,7 @@ class AuthManager {
         // 简化权限：只有免费和会员两种
         const userPlan = this.currentSubscription ? this.currentSubscription.plan_type : 'free';
         
-        // 会员可以访问所有内容
+        // 会员可以访问所有内容（包括premium权限要求）
         if (userPlan === 'premium_10d' || userPlan === 'premium_30d' || userPlan === 'premium_lifetime') {
             return true;
         }
