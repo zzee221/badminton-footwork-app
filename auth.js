@@ -93,6 +93,7 @@ class AuthManager {
         if (this.currentSubscription) {
             const planNames = {
                 'free': '免费用户',
+                'premium_10d': '体验会员',
                 'premium_30d': '30天会员',
                 'premium_lifetime': '永久会员'
             };
@@ -310,6 +311,7 @@ class AuthManager {
         if (this.currentSubscription) {
             const planNames = {
                 'free': '免费用户',
+                'premium_10d': '体验会员',
                 'premium_30d': '30天会员',
                 'premium_lifetime': '永久会员'
             };
@@ -318,7 +320,7 @@ class AuthManager {
             membershipBadge.textContent = planNames[this.currentSubscription.plan_type] || '会员';
             
             // 设置会员徽章样式
-            if (this.currentSubscription.plan_type === 'premium_30d' || this.currentSubscription.plan_type === 'premium_lifetime') {
+            if (this.currentSubscription.plan_type === 'premium_10d' || this.currentSubscription.plan_type === 'premium_30d' || this.currentSubscription.plan_type === 'premium_lifetime') {
                 membershipBadge.className = 'px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-600';
                 profileUpgradeBtn.style.display = 'none'; // 会员用户隐藏升级按钮
             } else {
@@ -511,6 +513,12 @@ class AuthManager {
             }
 
             // 立即标记激活码为使用中，防止重复使用
+            console.log('尝试锁定激活码:', {
+                id: codeData.id,
+                code: codeData.code,
+                user_id: this.currentUser.id
+            });
+            
             const { error: lockError } = await this.supabase
                 .from('activation_codes')
                 .update({
@@ -522,13 +530,15 @@ class AuthManager {
                 .eq('is_used', false); // 确保还是未使用状态
 
             if (lockError) {
+                console.error('锁定激活码失败:', lockError);
                 this.showMessage('upgrade-message', '激活码已被其他用户使用', 'error');
                 return;
             }
+            console.log('激活码锁定成功');
 
             // 计算过期时间（永久会员为null）
             let expiresAt = null;
-            if (codeData.plan_type === 'premium_30d') {
+            if (codeData.plan_type === 'premium_10d' || codeData.plan_type === 'premium_30d') {
                 expiresAt = new Date();
                 expiresAt.setDate(expiresAt.getDate() + codeData.duration_days);
             }
@@ -588,7 +598,7 @@ class AuthManager {
         const userPlan = this.currentSubscription ? this.currentSubscription.plan_type : 'free';
         
         // 会员可以访问所有内容
-        if (userPlan === 'premium_30d' || userPlan === 'premium_lifetime') {
+        if (userPlan === 'premium_10d' || userPlan === 'premium_30d' || userPlan === 'premium_lifetime') {
             return true;
         }
         
