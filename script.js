@@ -358,10 +358,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 description = stepInfo.description;
             }
             
-            // 总是添加步伐用途（整体描述）
-            if (stepInfo.patterns.length > 1) {
-                description += `<br><br><strong>步伐用途：</strong>${stepInfo.description}`;
-            }
+            // 总是添加步伐用途（整体描述），不管有多少个pattern
+            description += `<br><br><strong>步伐用途：</strong>${stepInfo.description}`;
             
             // 如果有多种模式，添加模式信息
             if (stepInfo.patterns.length > 1) {
