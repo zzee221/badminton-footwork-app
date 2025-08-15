@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let freeVideoIndices = [];
     // 可访问的付费视频索引列表
     let accessiblePaidVideoIndices = [];
+    // 当前显示的步伐序列
+    let currentSequence = '';
 
     // 监听步伐类型选择变化
     stepTypeRadios.forEach(radio => {
@@ -205,6 +207,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function showGifModal(sequence) {
         // 重置视频索引
         currentVideoIndex = 0;
+        // 存储当前sequence
+        currentSequence = sequence;
         
         // 获取步伐类型的中文名称
         const stepType = currentStepType === 'parallel' ? '平行启动' : '前后启动';
@@ -326,6 +330,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // 更新步伐描述显示
+    function updateStepDescription(sequence) {
+        const stepInfo = stepConfig.getStepInfo(currentStepType, sequence);
+        
+        if (stepInfo) {
+            // 根据当前视频索引找到对应的pattern
+            let currentPattern = null;
+            let videoIndex = currentVideoIndex;
+            
+            // 遍历patterns找到当前视频对应的pattern
+            for (const pattern of stepInfo.patterns) {
+                if (videoIndex < pattern.videos.length) {
+                    currentPattern = pattern;
+                    break;
+                }
+                videoIndex -= pattern.videos.length;
+            }
+            
+            let description = '';
+            
+            // 显示当前pattern的独立描述（即使为空也显示格式）
+            if (currentPattern) {
+                description = `<strong>${currentPattern.name}：</strong>${currentPattern.description || '待补充'}`;
+            } else {
+                // 回退到整体描述
+                description = stepInfo.description;
+            }
+            
+            // 总是添加步伐用途（整体描述）
+            if (stepInfo.patterns.length > 1) {
+                description += `<br><br><strong>步伐用途：</strong>${stepInfo.description}`;
+            }
+            
+            // 如果有多种模式，添加模式信息
+            if (stepInfo.patterns.length > 1) {
+                const accessiblePatterns = stepInfo.patterns.filter(pattern => {
+                    return pattern.isFree || authManager.hasPermission('premium');
+                });
+                
+                if (accessiblePatterns.length > 0) {
+                    const patternNames = accessiblePatterns.map(p => p.name).join('、');
+                    description += `<br><br><strong>可用模式：</strong>${patternNames}`;
+                }
+            }
+            
+            descriptionText.innerHTML = description;
+        }
+    }
+
     // 显示视频模态框
     function showVideoModal(sequence, stepType) {
         // 显示第一个视频
@@ -343,41 +396,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // 设置标题
         modalTitle.textContent = `${stepType}：${stepInfo.name} (${sequence})`;
 
-        // 显示对应的步伐说明
-        if (stepInfo) {
-            // 获取当前pattern的描述
-            const currentPattern = stepInfo.patterns[currentVideoIndex];
-            let description = '';
-            
-            if (currentPattern && currentPattern.description) {
-                // 显示当前pattern的独立描述
-                description = `<strong>${currentPattern.name}：</strong>${currentPattern.description}`;
-            } else {
-                // 回退到整体描述
-                description = stepInfo.description;
-            }
-            
-            // 添加整体描述（可选）
-            if (stepInfo.patterns.length > 1 && currentPattern.description) {
-                description += `<br><br><em>整体描述：${stepInfo.description}</em>`;
-            }
-            
-            // 如果有多种模式，添加模式信息
-            if (stepInfo.patterns.length > 1) {
-                const accessiblePatterns = stepInfo.patterns.filter(pattern => {
-                    return pattern.isFree || authManager.hasPermission('premium');
-                });
-                
-                if (accessiblePatterns.length > 0) {
-                    const patternNames = accessiblePatterns.map(p => p.name).join('、');
-                    description += `<br><br><strong>可用模式：</strong>${patternNames}`;
-                }
-            }
-            
-            descriptionText.innerHTML = description;
-        } else {
-            descriptionText.textContent = '选择两个点位后，将显示对应的步伐说明。步伐是羽毛球步伐的基础，正确的步伐能够帮助球员快速到达击球位置，提高击球质量。';
-        }
+        // 更新步伐描述
+        updateStepDescription(sequence);
 
         // 更新计数器
         videoCounter.textContent = `${currentVideoIndex + 1}/${currentVideoList.length}`;
@@ -418,6 +438,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 更新计数器
         videoCounter.textContent = `${currentVideoIndex + 1}/${currentVideoList.length}`;
+        
+        // 更新步伐描述
+        updateStepDescription(currentSequence);
     }
 
     // 切换到下一个视频
@@ -441,6 +464,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 更新计数器
         videoCounter.textContent = `${currentVideoIndex + 1}/${currentVideoList.length}`;
+        
+        // 更新步伐描述
+        updateStepDescription(currentSequence);
     }
 
     // 检查是否有权限访问指定索引的视频

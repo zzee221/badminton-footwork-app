@@ -97,11 +97,13 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['平行启动1-7.mp4']
                             },
                             {
                                 name: '小跳',
+                                description: '',
                                 isFree: true,
                                 videos: ['平行启动1-7（小跳）.mp4']
                             }
@@ -119,6 +121,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动1-2.mp4']
                             }
@@ -130,6 +133,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动1-3.mp4']
                             }
@@ -141,11 +145,13 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动1-4.mp4']
                             },
                             {
                                 name: '进阶步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动1-4（1）.mp4']
                             }
@@ -157,11 +163,13 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动1-5.mp4']
                             },
                             {
                                 name: '进阶步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动1-5（单脚杀）.mp4', '前后启动1-5（并步）.mp4']
                             }
@@ -173,6 +181,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动2-4.mp4']
                             }
@@ -184,6 +193,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动2-5.mp4']
                             }
@@ -195,11 +205,13 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动3-4.mp4']
                             },
                             {
                                 name: '交叉步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动3-4（交叉）.mp4']
                             }
@@ -211,11 +223,13 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动3-5.mp4']
                             },
                             {
                                 name: '主动步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动3-5（主动）.mp4']
                             }
@@ -227,6 +241,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动4-2.mp4']
                             }
@@ -238,6 +253,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动4-3.mp4']
                             }
@@ -249,6 +265,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动5-2.mp4']
                             }
@@ -260,6 +277,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
+                                description: '',
                                 isFree: true,
                                 videos: ['前后启动5-3.mp4']
                             }
