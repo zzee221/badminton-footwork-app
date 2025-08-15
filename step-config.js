@@ -9,47 +9,47 @@ class StepConfig {
                 steps: {
                     '1-2': {
                         name: '中心到反手网前',
-                        description: '从中心位置(1)到反手网前(2)的平行启动步伐：双脚平行站立，快速向左侧移动，用反手握拍接球。',
+                        description: '从中心位置(1)到反手网前(2)的平行启动步伐：起高球后，防守导向的平行启动，对手吊球反手前场区域。',
                         patterns: [
                             {
-                                name: '基础步伐',
-                                description: '基础步伐是平行启动反手网前动作的标准版本，注重基础动作的规范性：保持重心稳定，小步快速移动，反手握拍准备充分，适合初学者掌握基本移动节奏。',
+                                name: '反手蹬跨上网',
+                                description: '平行分腿启动+跨步上网，关键点是右脚发力，一步带动整个身体，落地衔接弓步。',
                                 isFree: true,
                                 videos: ['平行启动1-2.mp4']
                             },
                             {
-                                name: '进阶步伐',
-                                description: '进阶步伐在基础步伐上增加了更快的启动速度和更小的步幅，强调反应速度和身体协调性，适合有一定基础的球员提升实战表现。',
-                                isFree: false,
+                                name: '反手蹬跨上网',
+                                description: '平行分腿启动+跨步上网，关键点是右脚发力，一步带动整个身体，落地衔接弓步。',
+                                isFree: true,
                                 videos: ['平行启动1-2（1）.mp4']
                             }
                         ]
                     },
                     '1-3': {
                         name: '中心到正手网前',
-                        description: '从中心位置(1)到正手网前(3)的平行启动步伐：双脚平行站立，快速向右侧移动，用正手握拍接球。',
+                        description: '从中心位置(1)到正手网前(3)的平行启动步伐：起高球后，防守导向的平行启动，对手吊球正手前场区域。',
                         patterns: [
                             {
-                                name: '基础步伐',
-                                description: '基础步伐是平行启动正手网前动作的标准版本，注重右侧移动的流畅性和正手握拍的准确性，保持身体平衡，步幅适中，是正手网前技术的基础。',
+                                name: '正手并步上网',
+                                description: '平行分腿启动+并步上网，关键点是左脚发力，推动身体重心移动，落地衔接弓步',
                                 isFree: true,
                                 videos: ['平行启动1-3.mp4']
                             },
                             {
-                                name: '进阶步伐',
-                                description: '进阶步伐采用更快的启动速度和更有力的蹬地动作，强调身体侧身转体的协调性，提高移动效率，适合比赛中快速反应和主动进攻的需要。',
-                                isFree: false,
+                                name: '正手并步上网',
+                                description: '平行分腿启动+并步上网，关键点是左脚发力，推动身体重心移动，落地衔接弓步',
+                                isFree: true,
                                 videos: ['平行启动1-3（1）.mp4']
                             }
                         ]
                     },
                     '1-4': {
                         name: '中心到头顶后场',
-                        description: '从中心位置(1)到头顶后场(4)的平行启动步伐：双脚平行站立，快速向左后方移动，用头顶击球技术接球。',
+                        description: '从中心位置(1)到头顶后场(4)的平行启动步伐：起高球后，防守导向的平行启动，对手高远头顶后场。',
                         patterns: [
                             {
-                                name: '基础步伐',
-                                description: '基础步伐是平行启动头顶后场动作的核心版本，重点在于向后移动时保持身体平衡，用头顶击球技术处理高远球，是后场防守的基础技术。注重转身协调性和步法的连贯性。',
+                                name: '头顶后退步伐（马来步）',
+                                description: '马来步，右脚在侧身向后迈的同时，左脚加一个后退的小垫步以增加后退距离；适用于突击提速。',
                                 isFree: true,
                                 videos: ['平行启动1-4.mp4']
                             }
@@ -57,41 +57,38 @@ class StepConfig {
                     },
                     '1-5': {
                         name: '中心到正手后场',
-                        description: '从中心位置(1)到正手后场(5)的平行启动步伐：双脚平行站立，快速向右后方移动，用正手高球或杀球技术接球。',
+                        description: '从中心位置(1)到正手后场(5)的平行启动步伐：起高球后，防守导向的平行启动，对手高远正手后场。',
                         patterns: [
                             {
-                                name: '基础步伐',
-                                description: '基础步伐是平行启动正手后场动作的标准版本，注重右后方移动的步法协调性，保持正手击球姿势，是正手后场技术的基础移动方式。强调身体重心的控制和移动的流畅性。',
+                                name: '正手后退步伐（并步）',
+                                description: '左脚发力，推动身体中心向右后方并步移动并侧身，衔接并步回过渡球或者中国跳突击。适用于较为主动状态。',
                                 isFree: true,
-                                videos: ['平行启动1-5.mp4']
+                                videos: ['平行启动1-5.mp4','平行启动1-5（1）.mp4']
                             },
                             {
-                                name: '进阶步伐',
-                                description: '进阶步伐包含两种技术变体：第一种强调更快的启动速度和更强的爆发力，第二种采用被动交叉步法，适用于被动手位，两种变体大大增强了后场击球的灵活性和威力。',
-                                isFree: false,
-                                videos: ['平行启动1-5（1）.mp4', '平行启动1-5（被动交叉）.mp4']
+                                name: '正手后退步伐（交叉）',
+                                description: '右脚调整身体朝向，关键点是采取后交叉+蹬跨步。适用于被动低手位击球。',
+                                isFree: true,
+                                videos: [ '平行启动1-5（被动交叉）.mp4']
                             }
                         ]
                     },
                     '1-6': {
                         name: '中心到反手中场',
-                        description: '从中心位置(1)到反手中场(6)的平行启动步伐：双脚平行站立，快速向左侧移动，用反手击球技术接球。',
+                        description: '从中心位置(1)到反手中场(6)的平行启动步伐：起高球后，防守导向的平行启动，对手杀球反手区。',
                         patterns: [
                             {
-                                name: '基础步伐',
-                                isFree: false,
+                                name: '反手位接杀步伐（转身）',
+                                description: '待补充',
+                                isFree: true,
                                 videos: ['平行启动1-6.mp4']
                             },
                             {
-                                name: '跨步勾对角',
-                                isFree: false,
-                                videos: ['平行启动1-6（跨步勾对角）.mp4']
+                                name: '反手位接杀步伐（跨步）',
+                                description: '待补充',
+                                isFree: true,
+                                videos: ['平行启动1-6（跨步）.mp4','平行启动1-6（跨步勾对角）.mp4']
                             },
-                            {
-                                name: '跨步',
-                                isFree: false,
-                                videos: ['平行启动1-6（跨步）.mp4']
-                            }
                         ]
                     },
                     '1-7': {
@@ -100,12 +97,12 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['平行启动1-7.mp4']
                             },
                             {
                                 name: '小跳',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['平行启动1-7（小跳）.mp4']
                             }
                         ]
@@ -149,7 +146,7 @@ class StepConfig {
                             },
                             {
                                 name: '进阶步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动1-4（1）.mp4']
                             }
                         ]
@@ -165,7 +162,7 @@ class StepConfig {
                             },
                             {
                                 name: '进阶步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动1-5（单脚杀）.mp4', '前后启动1-5（并步）.mp4']
                             }
                         ]
@@ -176,7 +173,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动2-4.mp4']
                             }
                         ]
@@ -187,7 +184,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动2-5.mp4']
                             }
                         ]
@@ -198,12 +195,12 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动3-4.mp4']
                             },
                             {
                                 name: '交叉步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动3-4（交叉）.mp4']
                             }
                         ]
@@ -214,12 +211,12 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动3-5.mp4']
                             },
                             {
                                 name: '主动步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动3-5（主动）.mp4']
                             }
                         ]
@@ -230,7 +227,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动4-2.mp4']
                             }
                         ]
@@ -241,7 +238,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动4-3.mp4']
                             }
                         ]
@@ -252,7 +249,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动5-2.mp4']
                             }
                         ]
@@ -263,7 +260,7 @@ class StepConfig {
                         patterns: [
                             {
                                 name: '基础步伐',
-                                isFree: false,
+                                isFree: true,
                                 videos: ['前后启动5-3.mp4']
                             }
                         ]

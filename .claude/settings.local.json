@@ -16,7 +16,9 @@
       "Bash(grep:*)",
       "WebFetch(domain:supabase.com)",
       "Bash(gh repo create:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(cat:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": []
   }
