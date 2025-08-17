@@ -18,7 +18,8 @@
       "Bash(gh repo create:*)",
       "WebFetch(domain:github.com)",
       "Bash(cat:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(dir:*)"
     ],
     "deny": []
   }
