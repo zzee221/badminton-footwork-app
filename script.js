@@ -34,6 +34,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 'doubles': 'male' // 暂时使用男单配置
             };
             currentGender = genderMapping[this.value] || 'male';
+            
+            // GA4 事件跟踪
+            if (window.ga4Tracker) {
+                window.ga4Tracker.trackGenderSwitch(currentGender);
+            }
+            
             // 重新渲染步伐列表
             renderStepList();
         });
@@ -57,6 +63,12 @@ document.addEventListener('DOMContentLoaded', function() {
     stepTypeRadios.forEach(radio => {
         radio.addEventListener('change', function() {
             currentStepType = this.value;
+            
+            // GA4 事件跟踪
+            if (window.ga4Tracker) {
+                window.ga4Tracker.trackStepTypeSwitch(currentStepType);
+            }
+            
             updatePointVisibility();
             renderStepList(); // 重新渲染步伐列表
         });
@@ -227,6 +239,13 @@ document.addEventListener('DOMContentLoaded', function() {
         currentVideoIndex = 0;
         // 存储当前sequence
         currentSequence = sequence;
+        
+        // GA4 事件跟踪 - 步伐查看
+        if (window.ga4Tracker) {
+            const stepInfo = stepConfig.getStepInfo(currentGender, currentStepType, sequence);
+            const isFree = stepInfo ? stepConfig.isStepFree(currentGender, currentStepType, sequence) : false;
+            window.ga4Tracker.trackStepView(sequence, currentStepType, currentGender, isFree);
+        }
         
         // 获取步伐类型的中文名称
         const stepType = currentStepType === 'parallel' ? '平行启动' : '前后启动';
@@ -402,10 +421,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // 根据性别添加路径前缀
         let videoPath;
         if (currentGender === 'male') {
-            videoPath = '步伐MP4图/' + firstVideo;
+            videoPath = 'male_steps/' + firstVideo;
         } else {
-            // 女单视频已经在配置中包含完整路径，直接使用
-            videoPath = firstVideo;
+            // 女单视频添加英文路径前缀
+            videoPath = 'female_steps/' + firstVideo;
         }
         stepVideo.src = videoPath;
         stepVideo.classList.remove('hidden');
@@ -414,12 +433,44 @@ document.addEventListener('DOMContentLoaded', function() {
         // 重新加载视频以确保正确播放
         stepVideo.load();
         
+        // 添加视频播放事件跟踪
+        stepVideo.addEventListener('play', function() {
+            if (window.ga4Tracker) {
+                const stepInfo = stepConfig.getStepInfo(currentGender, currentStepType, sequence);
+                let patternName = '';
+                let isFree = false;
+                
+                if (stepInfo && stepInfo.patterns.length > 0) {
+                    // 找到当前视频对应的pattern
+                    let videoIndex = currentVideoIndex;
+                    for (const pattern of stepInfo.patterns) {
+                        if (videoIndex < pattern.videos.length) {
+                            patternName = pattern.name;
+                            isFree = pattern.isFree;
+                            break;
+                        }
+                        videoIndex -= pattern.videos.length;
+                    }
+                }
+                
+                window.ga4Tracker.trackVideoPlay(
+                    sequence,
+                    currentStepType,
+                    currentGender,
+                    currentVideoIndex + 1,
+                    currentVideoList.length,
+                    patternName,
+                    isFree
+                );
+            }
+        }, { once: true }); // 只在第一次播放时触发
+        
         // 添加视频加载错误处理
         stepVideo.onerror = function() {
             console.error('视频加载失败:', videoPath);
-            // 如果是女单视频且加载失败，尝试移除路径前缀
-            if (currentGender === 'female' && videoPath.includes('女单步伐MP4图/')) {
-                const fallbackPath = videoPath.replace('女单步伐MP4图/', '');
+            // 如果是女单视频且加载失败，尝试不使用目录前缀
+            if (currentGender === 'female' && videoPath.includes('female_steps/')) {
+                const fallbackPath = videoPath.replace('female_steps/', '');
                 console.log('尝试备用路径:', fallbackPath);
                 stepVideo.src = fallbackPath;
                 stepVideo.load();
@@ -470,10 +521,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // 根据性别添加路径前缀
         let videoPath;
         if (currentGender === 'male') {
-            videoPath = '步伐MP4图/' + prevVideo;
+            videoPath = 'male_steps/' + prevVideo;
         } else {
-            // 女单视频已经在配置中包含完整路径，直接使用
-            videoPath = prevVideo;
+            // 女单视频添加英文路径前缀
+            videoPath = 'female_steps/' + prevVideo;
         }
         stepVideo.src = videoPath;
         
@@ -483,9 +534,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // 添加视频加载错误处理
         stepVideo.onerror = function() {
             console.error('视频加载失败:', videoPath);
-            // 如果是女单视频且加载失败，尝试移除路径前缀
-            if (currentGender === 'female' && videoPath.includes('女单步伐MP4图/')) {
-                const fallbackPath = videoPath.replace('女单步伐MP4图/', '');
+            // 如果是女单视频且加载失败，尝试不使用目录前缀
+            if (currentGender === 'female' && videoPath.includes('female_steps/')) {
+                const fallbackPath = videoPath.replace('female_steps/', '');
                 console.log('尝试备用路径:', fallbackPath);
                 stepVideo.src = fallbackPath;
                 stepVideo.load();
@@ -516,10 +567,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // 根据性别添加路径前缀
         let videoPath;
         if (currentGender === 'male') {
-            videoPath = '步伐MP4图/' + nextVideo;
+            videoPath = 'male_steps/' + nextVideo;
         } else {
-            // 女单视频已经在配置中包含完整路径，直接使用
-            videoPath = nextVideo;
+            // 女单视频添加英文路径前缀
+            videoPath = 'female_steps/' + nextVideo;
         }
         stepVideo.src = videoPath;
         
@@ -529,9 +580,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // 添加视频加载错误处理
         stepVideo.onerror = function() {
             console.error('视频加载失败:', videoPath);
-            // 如果是女单视频且加载失败，尝试移除路径前缀
-            if (currentGender === 'female' && videoPath.includes('女单步伐MP4图/')) {
-                const fallbackPath = videoPath.replace('女单步伐MP4图/', '');
+            // 如果是女单视频且加载失败，尝试不使用目录前缀
+            if (currentGender === 'female' && videoPath.includes('female_steps/')) {
+                const fallbackPath = videoPath.replace('female_steps/', '');
                 console.log('尝试备用路径:', fallbackPath);
                 stepVideo.src = fallbackPath;
                 stepVideo.load();
