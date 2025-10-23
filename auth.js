@@ -18,6 +18,13 @@ class AuthManager {
         
         if (user) {
             this.currentUser = user;
+            
+            // 检查是否是OAuth用户（Google登录）
+            if (user.app_metadata?.provider === 'google') {
+                // 处理OAuth用户资料
+                await this.handleOAuthUser(user);
+            }
+            
             await this.getUserProfile();
             await this.getUserSubscription();
             this.showUserMenu();
@@ -160,6 +167,7 @@ class AuthManager {
         const registerForm = document.getElementById('register-form');
         const loginSubmit = document.getElementById('login-submit');
         const registerSubmit = document.getElementById('register-submit');
+        const googleLoginBtn = document.getElementById('google-login-btn');
 
         // 关闭模态框
         closeAuthModal.addEventListener('click', () => {
@@ -201,6 +209,13 @@ class AuthManager {
         registerSubmit.addEventListener('click', () => {
             this.register();
         });
+
+        // Google登录按钮
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', () => {
+                this.loginWithGoogle();
+            });
+        }
 
         // 回车提交
         document.getElementById('login-password').addEventListener('keypress', (e) => {
@@ -407,6 +422,108 @@ class AuthManager {
 
         } catch (error) {
             this.showMessage('auth-message', '登录失败，请重试', 'error');
+        }
+    }
+
+    // Google OAuth登录
+    async loginWithGoogle() {
+        try {
+            this.showMessage('auth-message', '正在跳转到Google登录...', 'info');
+            
+            // 使用Supabase的Google OAuth登录
+            const { data, error } = await this.supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    }
+                }
+            });
+
+            if (error) {
+                this.showMessage('auth-message', `Google登录失败: ${error.message}`, 'error');
+                return;
+            }
+
+            // OAuth登录会重定向到Google，成功后会返回到我们的页面
+            // 在返回的页面中，我们需要检查用户状态并创建用户资料
+            console.log('Google OAuth登录初始化成功');
+            
+        } catch (error) {
+            this.showMessage('auth-message', 'Google登录失败，请重试', 'error');
+            console.error('Google登录错误:', error);
+        }
+    }
+
+    // 处理OAuth登录后的用户资料创建
+    async handleOAuthUser(user) {
+        try {
+            // 检查用户是否已有资料
+            const { data: existingProfile, error: checkError } = await this.supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') {
+                console.error('检查用户资料错误:', checkError);
+                return;
+            }
+
+            // 如果没有资料，创建一个新资料
+            if (!existingProfile) {
+                // 从Google用户信息中提取用户名
+                let username = user.user_metadata?.full_name || 
+                              user.user_metadata?.name || 
+                              user.email?.split('@')[0] || 
+                              'Google用户';
+                
+                // 确保用户名唯一
+                let finalUsername = username;
+                let counter = 1;
+                
+                while (true) {
+                    const { data: checkUser, error: checkError } = await this.supabase
+                        .from('profiles')
+                        .select('username')
+                        .eq('username', finalUsername)
+                        .single();
+                    
+                    if (checkError && checkError.code === 'PGRST116') {
+                        // 用户名不存在，可以使用
+                        break;
+                    }
+                    
+                    finalUsername = `${username}${counter}`;
+                    counter++;
+                }
+
+                // 创建用户资料
+                const { data: profile, error: insertError } = await this.supabase
+                    .from('profiles')
+                    .insert([
+                        {
+                            id: user.id,
+                            username: finalUsername,
+                            email: user.email,
+                            avatar_url: user.user_metadata?.avatar_url || null,
+                            created_at: new Date()
+                        }
+                    ])
+                    .select()
+                    .single();
+
+                if (insertError) {
+                    console.error('创建用户资料错误:', insertError);
+                    return;
+                }
+
+                console.log('OAuth用户资料创建成功:', profile);
+            }
+        } catch (error) {
+            console.error('处理OAuth用户错误:', error);
         }
     }
 
