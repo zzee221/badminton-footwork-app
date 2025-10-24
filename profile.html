@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 羽毛球步伐训练应用</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
+    <link rel="stylesheet" href="styles.css?v=2.2.1">
+    <script src="supabase-config.js?v=2.3.0"></script>
+    <script src="auth.js?v=2.3.0"></script>
+    <script src="step-config.js?v=2.3.0"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo和标题 -->
+                <div class="flex items-center">
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-800">羽毛球步伐示意图</h1>
+                </div>
+                
+                <!-- 桌面端导航 -->
+                <div class="hidden sm:flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">首页</a>
+                    <a href="profile.html" class="text-blue-600 border-b-2 border-blue-600 px-3 py-2 rounded-md text-sm font-medium">个人中心</a>
+                    
+                    <!-- 用户菜单 -->
+                    <div id="user-menu" class="bg-white rounded-lg shadow-md p-2 hidden">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:bg-blue-600 transition duration-300" id="user-avatar-btn">
+                                <span id="user-avatar">U</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-gray-800" id="user-name">用户</p>
+                                <p class="text-xs text-gray-500" id="user-plan">免费用户</p>
+                            </div>
+                            <button id="upgrade-btn-menu" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-xs transition duration-300">
+                                升级
+                            </button>
+                            <button id="logout-btn" class="text-red-500 hover:text-red-700">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="login-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-300">
+                        登录/注册
+                    </button>
+                </div>
+                
+                <!-- 移动端菜单按钮 -->
+                <div class="sm:hidden">
+                    <button id="mobile-menu-btn" class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden sm:hidden bg-white border-t border-gray-200">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="index.html" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100">首页</a>
+                <a href="profile.html" class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 bg-blue-50">个人中心</a>
+                
+                <!-- 用户菜单 -->
+                <div id="mobile-user-menu" class="pt-4 pb-3 border-t border-gray-200">
+                    <div class="flex items-center px-3">
+                        <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                            <span id="mobile-user-avatar-text">U</span>
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-base font-medium text-gray-800" id="mobile-user-name">用户</div>
+                            <div class="text-sm font-medium text-gray-500" id="mobile-user-email">user@example.com</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 px-2 space-y-1">
+                        <button id="mobile-upgrade-btn" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50">
+                            <span class="flex items-center">
+                                <svg class="mr-2 h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                                升级会员
+                            </span>
+                        </button>
+                        <button id="mobile-logout-btn" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:text-red-800 hover:bg-red-50">
+                            <span class="flex items-center">
+                                <svg class="mr-2 h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                                退出登录
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 登录按钮（移动端） -->
+                <div id="mobile-login-section" class="pt-4 pb-3 border-t border-gray-200">
+                    <button id="mobile-login-btn" class="block w-full text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                        登录/注册
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="pt-20 pb-8 px-4 max-w-7xl mx-auto w-full">
+        <!-- 页面标题 -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">个人中心</h1>
+            <p class="text-gray-600 mt-2">管理您的账户信息和会员状态</p>
+        </div>
+
+        <!-- 用户信息卡片 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex items-center space-x-4 mb-6">
+                <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                    <span id="profile-avatar">U</span>
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800" id="profile-username">用户名</h2>
+                    <p class="text-gray-500" id="profile-email">user@example.com</p>
+                </div>
+            </div>
+
+            <!-- 会员状态 -->
+            <div class="border-t pt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">会员状态</h3>
+                    <span id="membership-badge" class="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600">
+                        免费用户
+                    </span>
+                </div>
+                <div id="membership-expiry" class="text-sm text-gray-500 mb-4 hidden">
+                    到期时间：<span id="expiry-date">--</span>
+                </div>
+                <div id="membership-features" class="space-y-2">
+                    <!-- 会员特性将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 会员升级卡片 -->
+        <div id="upgrade-card" class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">升级会员</h3>
+            <div class="mb-6">
+                <h4 class="font-medium text-gray-700 mb-2">会员特权</h4>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• 解锁所有18个点位组合（平行启动6个+前后启动12个）</li>
+                    <li>• 访问所有步伐模式（基础+高级模式）</li>
+                    <li>• 观看全部30个视频演示</li>
+                    <li>• 享受完整的羽毛球训练体验</li>
+                    <li>• 持续更新的训练内容</li>
+                </ul>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">激活码</label>
+                    <input type="text" id="activation-code" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="请输入激活码">
+                </div>
+                <button id="activate-submit" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-md transition duration-300">
+                    激活会员
+                </button>
+            </div>
+            
+            <div id="upgrade-message" class="mt-4 p-3 rounded-md hidden"></div>
+        </div>
+
+        <!-- 免费内容卡片 -->
+        <div class="bg-green-50 rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">免费内容</h3>
+            <p class="text-gray-600 mb-4">免费用户可以访问以下基础点位组合：</p>
+            <ul class="text-sm text-gray-600 space-y-1">
+                <li>• 平行启动：1-2, 1-3, 1-4, 1-5（4个点位组合）</li>
+                <li>• 前后启动：1-2, 1-3, 1-4, 1-5（4个点位组合）</li>
+                <li>• 每个点位组合仅限基础步伐模式</li>
+                <li>• 共8个点位组合，8个基础视频</li>
+            </ul>
+        </div>
+
+        <!-- 学习记录卡片 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">学习记录</h3>
+            <div id="learning-stats" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-500" id="total-views">0</div>
+                    <div class="text-sm text-gray-500">总观看次数</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-500" id="unique-steps">0</div>
+                    <div class="text-sm text-gray-500">学习步伐数</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-500" id="study-days">0</div>
+                    <div class="text-sm text-gray-500">学习天数</div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <h4 class="font-medium text-gray-700 mb-2">最近学习</h4>
+                <div id="recent-steps" class="space-y-2">
+                    <!-- 最近学习的步伐将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="text-center">
+                <p>&copy; 2025 羽毛球步伐训练应用. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化移动端菜单
+            initMobileMenu();
+            
+            // 初始化页面
+            initProfilePage();
+            
+            // 绑定事件
+            bindProfileEvents();
+        });
+
+        // 初始化移动端菜单
+        function initMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileLoginBtn = document.getElementById('mobile-login-btn');
+            const mobileUpgradeBtn = document.getElementById('mobile-upgrade-btn');
+            const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+            
+            // 移动端菜单按钮点击事件
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+            
+            // 移动端登录按钮点击事件
+            if (mobileLoginBtn) {
+                mobileLoginBtn.addEventListener('click', function() {
+                    // 跳转到首页并打开登录模态框
+                    window.location.href = 'index.html?login=true';
+                });
+            }
+            
+            // 移动端升级按钮点击事件
+            if (mobileUpgradeBtn) {
+                mobileUpgradeBtn.addEventListener('click', function() {
+                    // 显示激活码模态框
+                    const activateModal = document.getElementById('activate-modal');
+                    if (activateModal) {
+                        activateModal.classList.remove('hidden');
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // 移动端登出按钮点击事件
+            if (mobileLogoutBtn) {
+                mobileLogoutBtn.addEventListener('click', function() {
+                    if (typeof authManager !== 'undefined') {
+                        authManager.logout();
+                    }
+                });
+            }
+        }
+
+        // 初始化个人页面
+        async function initProfilePage() {
+            // 等待认证管理器初始化
+            if (typeof authManager !== 'undefined') {
+                // 等待authManager完成初始化，最多等待3秒
+                let attempts = 0;
+                const maxAttempts = 6; // 最多尝试6次，每次500ms，总共3秒
+                
+                while (authManager.currentUser === null && attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    attempts++;
+                }
+                
+                // 如果用户仍未登录，重定向到首页
+                if (!authManager.currentUser) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // 加载用户信息
+                loadUserInfo();
+                
+                // 加载学习记录
+                loadLearningRecords();
+            } else {
+                // 如果认证管理器未加载，等待一段时间后重试
+                setTimeout(initProfilePage, 500);
+            }
+        }
+
+        // 加载用户信息
+        function loadUserInfo() {
+            if (!authManager.currentUser) return;
+            
+            // 更新用户基本信息
+            const profile = authManager.currentUser.profile;
+            if (profile) {
+                document.getElementById('profile-username').textContent = profile.username || authManager.currentUser.email;
+                document.getElementById('profile-email').textContent = authManager.currentUser.email;
+                
+                // 更新头像
+                const avatar = document.getElementById('profile-avatar');
+                const username = profile.username || authManager.currentUser.email;
+                avatar.textContent = username.charAt(0).toUpperCase();
+            }
+            
+            // 更新会员状态
+            updateMembershipStatus();
+        }
+
+        // 更新会员状态
+        function updateMembershipStatus() {
+            const membershipBadge = document.getElementById('membership-badge');
+            const membershipExpiry = document.getElementById('membership-expiry');
+            const expiryDate = document.getElementById('expiry-date');
+            const membershipFeatures = document.getElementById('membership-features');
+            const upgradeCard = document.getElementById('upgrade-card');
+            
+            if (authManager.currentSubscription) {
+                // 用户是会员
+                const planNames = {
+                    'premium_10d': '体验会员',
+                    'premium_30d': '30天会员',
+                    'premium_lifetime': '永久会员'
+                };
+                
+                const planName = planNames[authManager.currentSubscription.plan_type] || '会员';
+                membershipBadge.textContent = planName;
+                membershipBadge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800';
+                
+                // 显示到期时间（如果不是永久会员）
+                if (authManager.currentSubscription.plan_type !== 'premium_lifetime' && authManager.currentSubscription.expires_at) {
+                    const expiry = new Date(authManager.currentSubscription.expires_at);
+                    expiryDate.textContent = expiry.toLocaleDateString('zh-CN');
+                    membershipExpiry.classList.remove('hidden');
+                }
+                
+                // 隐藏升级卡片
+                upgradeCard.classList.add('hidden');
+                
+                // 显示会员特性
+                membershipFeatures.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 class="font-medium text-green-800 mb-2">您已解锁以下内容：</h4>
+                        <ul class="text-sm text-green-700 space-y-1">
+                            <li>✓ 所有18个点位组合</li>
+                            <li>✓ 所有步伐模式（基础+高级）</li>
+                            <li>✓ 全部30个视频演示</li>
+                            <li>✓ 完整训练体验</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                // 用户是免费用户
+                membershipBadge.textContent = '免费用户';
+                membershipBadge.className = 'px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-600';
+                membershipExpiry.classList.add('hidden');
+                
+                // 显示免费用户特性
+                membershipFeatures.innerHTML = `
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 class="font-medium text-blue-800 mb-2">您当前可以访问：</h4>
+                        <ul class="text-sm text-blue-700 space-y-1">
+                            <li>• 8个基础点位组合</li>
+                            <li>• 基础步伐模式</li>
+                            <li>• 8个基础视频演示</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        // 加载学习记录
+        function loadLearningRecords() {
+            // 这里可以从本地存储或服务器加载学习记录
+            // 目前使用模拟数据
+            const mockStats = {
+                totalViews: 15,
+                uniqueSteps: 6,
+                studyDays: 3
+            };
+            
+            const mockRecentSteps = [
+                { name: '平行启动 1-2', date: '2025-08-17', views: 3 },
+                { name: '前后启动 1-3', date: '2025-08-16', views: 2 },
+                { name: '平行启动 1-4', date: '2025-08-15', views: 4 }
+            ];
+            
+            // 更新统计数据
+            document.getElementById('total-views').textContent = mockStats.totalViews;
+            document.getElementById('unique-steps').textContent = mockStats.uniqueSteps;
+            document.getElementById('study-days').textContent = mockStats.studyDays;
+            
+            // 更新最近学习
+            const recentStepsContainer = document.getElementById('recent-steps');
+            recentStepsContainer.innerHTML = '';
+            
+            mockRecentSteps.forEach(step => {
+                const stepElement = document.createElement('div');
+                stepElement.className = 'flex justify-between items-center p-2 bg-gray-50 rounded';
+                stepElement.innerHTML = `
+                    <div>
+                        <div class="font-medium text-gray-800">${step.name}</div>
+                        <div class="text-xs text-gray-500">${step.date}</div>
+                    </div>
+                    <div class="text-sm text-gray-600">${step.views} 次观看</div>
+                `;
+                recentStepsContainer.appendChild(stepElement);
+            });
+        }
+
+        // 绑定事件
+        function bindProfileEvents() {
+            // 激活会员按钮
+            const activateBtn = document.getElementById('activate-submit');
+            if (activateBtn) {
+                activateBtn.addEventListener('click', function() {
+                    const activationCode = document.getElementById('activation-code').value.trim();
+                    
+                    if (!activationCode) {
+                        showUpgradeMessage('请输入激活码', 'error');
+                        return;
+                    }
+                    
+                    // 调用认证管理器的激活方法
+                    if (typeof authManager !== 'undefined' && authManager.activateSubscription) {
+                        authManager.activateSubscription(activationCode)
+                            .then(result => {
+                                if (result.success) {
+                                    showUpgradeMessage('激活成功！', 'success');
+                                    // 重新加载会员状态
+                                    setTimeout(() => {
+                                        location.reload();
+                                    }, 1500);
+                                } else {
+                                    showUpgradeMessage(result.message || '激活失败，请检查激活码是否正确', 'error');
+                                }
+                            })
+                            .catch(error => {
+                                showUpgradeMessage('激活过程中发生错误，请稍后再试', 'error');
+                                console.error('激活错误:', error);
+                            });
+                    } else {
+                        showUpgradeMessage('系统错误，请刷新页面后重试', 'error');
+                    }
+                });
+            }
+        }
+
+        // 显示升级消息
+        function showUpgradeMessage(message, type) {
+            const messageContainer = document.getElementById('upgrade-message');
+            messageContainer.textContent = message;
+            messageContainer.classList.remove('hidden');
+            
+            // 根据类型设置样式
+            if (type === 'success') {
+                messageContainer.className = 'mt-4 p-3 rounded-md bg-green-100 text-green-800';
+            } else if (type === 'error') {
+                messageContainer.className = 'mt-4 p-3 rounded-md bg-red-100 text-red-800';
+            } else {
+                messageContainer.className = 'mt-4 p-3 rounded-md bg-blue-100 text-blue-800';
+            }
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                messageContainer.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

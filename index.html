@@ -13,34 +13,87 @@
     <script src="script.js?v=2.3.0"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-    <!-- 用户状态栏 -->
-    <div class="fixed top-4 right-4 z-50">
-        <div id="user-menu" class="bg-white rounded-lg shadow-md p-4 hidden">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:bg-blue-600 transition duration-300" id="user-avatar-btn">
-                    <span id="user-avatar">U</span>
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-lg sm:text-xl font-bold text-gray-800">羽毛球步伐示意图</h1>
                 </div>
-                <div class="flex-1">
-                    <p class="text-sm font-semibold text-gray-800" id="user-name">用户</p>
-                    <p class="text-xs text-gray-500" id="user-plan">免费用户</p>
+                <div class="hidden sm:flex items-center space-x-4">
+                    <a href="index.html" class="text-blue-600 border-b-2 border-blue-600 px-3 py-2 rounded-md text-sm font-medium">首页</a>
+                    <a href="profile.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">个人中心</a>
+                    <div id="user-menu" class="bg-white rounded-lg shadow-md p-2 hidden">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold cursor-pointer hover:bg-blue-600 transition duration-300" id="user-avatar-btn">
+                                <span id="user-avatar">U</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-gray-800" id="user-name">用户</p>
+                                <p class="text-xs text-gray-500" id="user-plan">免费用户</p>
+                            </div>
+                            <button id="upgrade-btn-menu" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-xs transition duration-300">
+                                升级
+                            </button>
+                            <button id="logout-btn" class="text-red-500 hover:text-red-700">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="login-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-300">
+                        登录/注册
+                    </button>
                 </div>
-                <button id="upgrade-btn-menu" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded-md text-xs transition duration-300">
-                    升级
-                </button>
-                <button id="logout-btn" class="text-red-500 hover:text-red-700">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                    </svg>
-                </button>
+                
+                <!-- 移动端菜单按钮 -->
+                <div class="sm:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-gray-700 hover:text-blue-600 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 移动端菜单 -->
+            <div id="mobile-menu" class="hidden sm:hidden pb-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="index.html" class="text-blue-600 bg-blue-50 px-3 py-2 rounded-md text-sm font-medium">首页</a>
+                    <a href="profile.html" class="text-gray-700 hover:text-blue-600 hover:bg-gray-50 px-3 py-2 rounded-md text-sm font-medium">个人中心</a>
+                    <div id="mobile-user-menu" class="hidden">
+                        <div class="flex items-center space-x-3 px-3 py-2 bg-gray-50 rounded-md">
+                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold" id="mobile-user-avatar">
+                                <span>U</span>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-gray-800" id="mobile-user-name">用户</p>
+                                <p class="text-xs text-gray-500" id="mobile-user-plan">免费用户</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 px-3">
+                            <button id="mobile-upgrade-btn" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-md text-xs transition duration-300">
+                                升级
+                            </button>
+                            <button id="mobile-logout-btn" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-md text-xs transition duration-300">
+                                登出
+                            </button>
+                        </div>
+                    </div>
+                    <button id="mobile-login-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-300 w-full">
+                        登录/注册
+                    </button>
+                </div>
             </div>
         </div>
-        <button id="login-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition duration-300">
-            登录/注册
-        </button>
-    </div>
+    </nav>
 
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">羽毛球步伐示意图</h1>
-    <p class="text-gray-600 mb-6 text-center max-w-2xl">点击场地中的点位选择起点和终点，查看对应的羽毛球步伐演示。可以选择不同的启动方式。</p>
+    <!-- 主内容区域 -->
+    <main class="pt-20 pb-8 px-4 max-w-7xl mx-auto w-full">
+        <div class="text-center mb-6">
+            <p class="text-gray-600">点击场地中的点位选择起点和终点，查看对应的羽毛球步伐演示。可以选择不同的启动方式。</p>
+        </div>
 
     <!-- 步伐分类选择器 -->
     <div class="bg-white rounded-lg shadow-md p-4 mb-6 max-w-4xl w-full">
@@ -81,42 +134,50 @@
         </div>
     </div>
 
-    <div class="relative bg-white rounded-lg shadow-lg overflow-hidden max-w-4xl w-full">
-        <!-- 场地示意图容器 -->
-        <div id="court-container" class="relative w-full">
-            <img src="羽毛球场地半场示意图.jpg" alt="羽毛球场地半场示意图" class="w-full h-auto">
+        <!-- 双栏布局 -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <!-- 左侧：场地示意图 -->
+            <div class="order-2 xl:order-1">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div id="court-container" class="relative w-full">
+                        <img src="羽毛球场地半场示意图.jpg" alt="羽毛球场地半场示意图" class="w-full h-auto">
 
-            <!-- 点位标记 -->
-            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="1" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">1</div>
-            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="2" style="top: 30%; left: 20%; transform: translate(-50%, -50%);">2</div>
-            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="3" style="top: 30%; left: 80%; transform: translate(-50%, -50%);">3</div>
-            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="4" style="top: 70%; left: 20%; transform: translate(-50%, -50%);">4</div>
-            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="5" style="top: 70%; left: 80%; transform: translate(-50%, -50%);">5</div>
-            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="6" style="top: 50%; left: 20%; transform: translate(-50%, -50%);">6</div>
-            <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="7" style="top: 50%; left: 80%; transform: translate(-50%, -50%);">7</div>
-        </div>
-    </div>
-
-    <!-- 步伐列表展示 -->
-    <div class="bg-white rounded-lg shadow-md p-4 mt-6 mb-6 max-w-4xl w-full">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-gray-700">步伐列表</h2>
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center">
-                    <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                    <span class="text-sm text-gray-600">免费</span>
+                        <!-- 点位标记 -->
+                        <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="1" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">1</div>
+                        <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="2" style="top: 30%; left: 20%; transform: translate(-50%, -50%);">2</div>
+                        <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="3" style="top: 30%; left: 80%; transform: translate(-50%, -50%);">3</div>
+                        <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="4" style="top: 70%; left: 20%; transform: translate(-50%, -50%);">4</div>
+                        <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="5" style="top: 70%; left: 80%; transform: translate(-50%, -50%);">5</div>
+                        <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="6" style="top: 50%; left: 20%; transform: translate(-50%, -50%);">6</div>
+                        <div class="point absolute bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer text-lg font-bold" data-point="7" style="top: 50%; left: 80%; transform: translate(-50%, -50%);">7</div>
+                    </div>
                 </div>
-                <div class="flex items-center">
-                    <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                    <span class="text-sm text-gray-600">会员</span>
+            </div>
+            
+            <!-- 右侧：步伐列表 -->
+            <div class="order-1 xl:order-2">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-700 mb-2 sm:mb-0">步伐列表</h2>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                <span class="text-sm text-gray-600">免费</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                                <span class="text-sm text-gray-600">会员</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="step-list" class="space-y-4 max-h-96 overflow-y-auto">
+                        <!-- 步伐列表将通过JavaScript动态生成 -->
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div id="step-list" class="space-y-4">
-            <!-- 步伐列表将通过JavaScript动态生成 -->
-        </div>
-    </div>
+    </main>
 
     <!-- 浮窗 -->
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">

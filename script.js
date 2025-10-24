@@ -14,6 +14,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const nextGifBtn = document.getElementById('next-gif');
     const videoCounter = document.getElementById('video-counter');
     const stepList = document.getElementById('step-list');
+    
+    // 移动端菜单相关元素
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileLoginBtn = document.getElementById('mobile-login-btn');
+    const mobileUserMenu = document.getElementById('mobile-user-menu');
+    const mobileUpgradeBtn = document.getElementById('mobile-upgrade-btn');
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
 
     // 当前选择的步伐类型 (默认为平行启动)
     let currentStepType = 'parallel';
@@ -23,6 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化点位可见性和步伐列表
     updatePointVisibility();
     renderStepList();
+    
+    // 初始化移动端菜单
+    initMobileMenu();
     
     // 监听性别分类选择变化
     genderRadios.forEach(radio => {
@@ -61,6 +72,52 @@ document.addEventListener('DOMContentLoaded', function() {
             renderStepList(); // 重新渲染步伐列表
         });
     });
+    
+    // 初始化移动端菜单功能
+    function initMobileMenu() {
+        // 移动端菜单切换
+        if (mobileMenuButton) {
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+        
+        // 移动端登录按钮
+        if (mobileLoginBtn) {
+            mobileLoginBtn.addEventListener('click', function() {
+                // 关闭移动端菜单
+                mobileMenu.classList.add('hidden');
+                // 打开登录模态框
+                if (typeof authManager !== 'undefined') {
+                    authManager.showAuthModal();
+                }
+            });
+        }
+        
+        // 移动端升级按钮
+        if (mobileUpgradeBtn) {
+            mobileUpgradeBtn.addEventListener('click', function() {
+                // 关闭移动端菜单
+                mobileMenu.classList.add('hidden');
+                // 打开升级模态框
+                if (typeof authManager !== 'undefined') {
+                    authManager.showUpgradeModal();
+                }
+            });
+        }
+        
+        // 移动端登出按钮
+        if (mobileLogoutBtn) {
+            mobileLogoutBtn.addEventListener('click', function() {
+                // 关闭移动端菜单
+                mobileMenu.classList.add('hidden');
+                // 执行登出
+                if (typeof authManager !== 'undefined') {
+                    authManager.logout();
+                }
+            });
+        }
+    }
 
     // 更新点位可见性（6、7号点位仅在平行启动中显示）
     function updatePointVisibility() {

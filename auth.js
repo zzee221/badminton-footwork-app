@@ -147,6 +147,15 @@ class AuthManager {
             });
         }
 
+        // 移动端菜单按钮
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => {
+                const mobileMenu = document.getElementById('mobile-menu');
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+
         // 认证模态框事件
         this.bindAuthModalEvents();
 
@@ -297,11 +306,10 @@ class AuthManager {
         this.clearUpgradeMessage();
     }
 
-    // 显示个人页面模态框
+    // 显示个人页面
     showProfileModal() {
-        const profileModal = document.getElementById('profile-modal');
-        profileModal.classList.remove('hidden');
-        this.updateProfileModal();
+        // 跳转到个人页面
+        window.location.href = 'profile.html';
     }
 
     // 更新个人页面信息
